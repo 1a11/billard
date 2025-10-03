@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Archive - Post Title</title>
+    <!-- KaTeX CSS for mathematical rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+    <style>
+        /* Minimal styling to enforce serif font and meet new requirements */
+        body {
+            font-family: serif;
+            margin: 20px;
+            line-height: 1.6; /* Improved readability */
+            color: #000; /* Ensure all body text is black */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        /* Prevent horizontal scroll globally */
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        /* Hide scrollbars but keep functionality */
+        * {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+        }
+        
+        *::-webkit-scrollbar {
+            display: none; /* Safari and Chrome */
+        }
+
+        /* Style for centering the content column */
+        .content-wrapper {
+            max-width: 950px; /* Increased max width to give ample room for side notes */
+            margin: 0 auto; /* Centers the div horizontally */
+            width: 100%; /* Ensures it uses available space up to max-width */
+            box-sizing: border-box; /* Include padding in width calculation */
+            /* DON'T hide overflow here - line numbers and field notes need to extend outside */
+        }
+
+        /* Main Post Body Container - Sets the relative context for absolutely positioned notes and line numbers */
+        #main-post-body {
+            position: relative;
+            /* The actual text column width remains 600px, centered */
+            width: 600px; 
+            margin: 0 auto; 
+            /* Add generous bottom padding for footer breathing space */
+            padding-bottom: 120px;
+            box-sizing: border-box; /* Include padding in width calculation */
+            /* DON'T hide overflow here - field notes need to extend outside */
+        }
+
+        /* Post Content Styling */
+        .archive-content {
+            padding-top: 10px;
+        }
+
+        /* Main Post Title */
+        .archive-content h2 {
+            font-size: 2.2em; /* Larger title size */
+            font-weight: bold;
+            margin-bottom: 20px; /* Consistent spacing below the title */
+            margin-top: 0;
+        }
+
+        /* Subheadings - Reset to standard block element with grouping margins */
+        .archive-content h3 {
+            font-size: 1.2em;
+            font-weight: bold;
+            
+            /* Reduced vertical spacing for grouping */
+            margin-top: 40px; 
+            margin-bottom: 10px; 
+        }
+
+        /* NEW: Reduce the margin of an H3 that immediately follows a figure wrapper for tighter integration */
+        .archive-content .figure-wrapper + h3 {
+            margin-top: 25px; /* Reduced from 30px */
+        }
+
+        /* Reduce top margin of figure that comes right after h3 */
+        .archive-content h3 + .figure-wrapper {
+            margin-top: 20px; /* Tighter spacing between h3 and image */
+        }
+
+        /* Body Paragraph Styling (Vertical Stretch and Justify) */
+        .archive-content p {
+            /* Apply vertical stretch */
+            transform: scaleY(1.2); 
+            transform-origin: top left;
+            text-align: justify; /* Spaced to width */
+            font-size: 1.1em;
+            /* Increased line height to accommodate stretched text */
+            line-height: 1.9; 
+            /* INCREASED SPACING: More room below the paragraph */
+            margin: 0 0 35px 0; 
+        }
+        
+        /* --- Header & Nav Styles --- */
+        .header-container {
+            display: flex;
+            align-items: center; /* Vertically centers the nav and sticker */
+            gap: 20px; /* Space between sticker and nav */
+            margin-bottom: 40px; /* Increased space below the header for better separation */
+        }
+
+        nav {
+            display: flex;
+            gap: 15px; 
+            margin-left: auto;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: initial;
+            transition: color 0.1s;
+        }
+        
+        nav a:hover {
+            color: var(--date-color);
+            text-decoration: underline wavy; 
+            text-decoration-color: var(--date-color);
+            text-underline-offset: 4px;
+            cursor: pointer;
+        }
+
+        .pixel-sticker {
+            display: block;
+            transform-origin: center;
+        }
+
+        /* --- Field Note Styles --- */
+        .field-note {
+            position: absolute;
+            width: 220px; /* Reduced from 250px for slimmer column */
+            font-size: 0.85em; /* Reduced from 0.9em for smaller text */
+            transform-origin: top left;
+            padding: 0;
+            box-sizing: border-box;
+            color: initial;
+            pointer-events: none;
+            /* Ensure text is not cut off */
+            overflow: visible;
+            white-space: normal;
+            word-wrap: break-word;
+            /* Positioned relative to parent paragraph */
+            top: 0;
+        }
+
+        .note-text {
+            display: block;
+            font-family: sans-serif; 
+            text-align: left;
+            color: #555;
+            /* The scaleY(1.2) is applied here */
+            transform: scaleY(1.2);
+            transform-origin: top left;
+            padding: 10px;
+            line-height: 1.4;
+            box-sizing: border-box;
+            /* Allow text to expand as needed */
+            width: 100%;
+            overflow: visible;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
+
+        /* Positioning for Left Notes (moved further left) */
+        .field-note[data-position="left"] {
+            left: -260px; /* Adjusted: 220px width + 40px gap */
+        }
+
+        /* Positioning for Right Notes (moved further right) */
+        .field-note[data-position="right"] {
+            right: -260px; /* Adjusted: 220px width + 40px gap */
+        }
+
+        /* Style for the SVG brace */
+        .note-brace {
+            position: absolute;
+            top: 0;
+            stroke-width: 2; /* Reduced stroke width for a thinner line */
+            fill: none;
+            overflow: visible; 
+        }
+
+        /* Position the brace next to the text column */
+        .field-note[data-position="left"] > .note-brace {
+            right: -20px; /* Positions the brace into the gap */
+        }
+        .field-note[data-position="right"] > .note-brace {
+            left: -20px; /* Positions the brace into the gap */
+        }
+        
+        /* Adjust margin for text to clear the brace */
+        .field-note[data-position="right"] > .note-text {
+            margin-left: 15px;
+        }
+        .field-note[data-position="left"] > .note-text {
+            margin-right: 15px;
+        }
+
+        /* --- Line Number Gutter Styles (New) --- */
+        .line-number-gutter {
+            position: absolute;
+            /* Positioned 10px to the left of the paragraph */
+            left: -70px; 
+            top: 0; /* Relative to the paragraph itself */
+            width: 60px;
+            text-align: right;
+            font-size: 0.8em;
+            color: #999; /* Subtle grey for notebook lines */
+            pointer-events: none;
+            user-select: none;
+            font-family: monospace; 
+        }
+
+        .line-number {
+            display: block;
+            /* Height is set dynamically in JS to match calculated visualLineHeight */
+        }
+
+        /* Make paragraphs position:relative so gutters are positioned relative to them */
+        .archive-content p {
+            position: relative;
+        }
+
+        /* --- Block ID Label Styles (New) --- */
+        .block-id-label {
+            position: absolute;
+            left: -70px; /* Same as line numbers */
+            top: -20px; /* Above the block */
+            font-size: 0.75em;
+            color: #bbb;
+            font-family: monospace;
+            pointer-events: none;
+            user-select: none;
+            font-style: italic;
+        }
+
+        /* Apply relative positioning to all blockable elements */
+        .archive-content p,
+        .archive-content h2,
+        .archive-content h3,
+        .archive-content .figure-wrapper {
+            position: relative;
+        }
+
+        /* --- Figure and Media Styles (Updated) --- */
+        .figure-wrapper {
+            /* Reduced top margin for tighter spacing */
+            margin: 50px auto 0 auto; 
+            width: 100%;
+            text-align: center; 
+        }
+        
+        .figure-content, .figure-formula {
+            display: block; 
+            margin: 0 auto; 
+            width: auto; 
+            max-width: 100%; 
+            height: auto;
+        }
+
+        .figure-caption {
+            font-family: sans-serif;
+            font-size: 0.85em;
+            color: #777;
+            margin-top: 15px; /* Space above caption */
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        /* Footer styling for publication date and star */
+        .article-footer {
+            text-align: center;
+            margin-top: 60px;
+            color: #777;
+            font-family: sans-serif;
+            font-size: 0.75em; /* Made smaller */
+        }
+
+        .footer-date {
+            margin-bottom: 15px; /* Space between date and star */
+        }
+
+        .footer-star {
+            display: block;
+            color: #777;
+            font-size: 1em; /* Smaller star relative to the smaller base font */
+        }
+
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            body {
+                margin: 10px;
+                padding: 0;
+            }
+
+            .content-wrapper {
+                max-width: 100%;
+                width: calc(100vw - 25px);
+                padding: 0;
+                margin: 0 auto;
+                box-sizing: border-box;
+            }
+
+            #main-post-body {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+                padding-bottom: 80px; /* Reduced footer space on mobile */
+                box-sizing: border-box;
+            }
+
+            /* Hide field notes (bracket comments) on mobile */
+            .field-note {
+                display: none !important;
+            }
+
+            /* Hide line numbers on mobile */
+            .line-number-gutter {
+                display: none !important;
+            }
+
+            /* Hide block ID labels on mobile */
+            .block-id-label {
+                display: none !important;
+            }
+
+            /* Adjust typography for mobile */
+            .archive-content h2 {
+                font-size: 1.8em; /* Smaller title on mobile */
+                margin-bottom: 15px;
+            }
+
+            .archive-content h3 {
+                font-size: 1.1em;
+                margin-top: 30px; /* Reduced spacing on mobile */
+                margin-bottom: 8px;
+            }
+
+            .archive-content p {
+                font-size: 1em; /* Slightly smaller on mobile */
+                line-height: 1.8; /* Adjusted line height */
+                margin-bottom: 25px; /* Reduced paragraph spacing */
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+
+            .archive-content {
+                padding: 0 10px;
+                box-sizing: border-box;
+            }
+
+            /* Adjust header for mobile */
+            .header-container {
+                margin-bottom: 25px;
+                gap: 15px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            /* Adjust figure content for mobile */
+            .figure-wrapper {
+                margin: 40px auto 20px auto; /* Reduced spacing for mobile */
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+
+            .figure-content, .figure-formula {
+                max-width: 100%;
+                width: 100%;
+                height: auto;
+                box-sizing: border-box;
+            }
+
+            .figure-caption {
+                font-size: 0.8em;
+                margin-top: 10px;
+            }
+
+            /* Adjust footer for mobile */
+            .article-footer {
+                margin-top: 40px;
+                font-size: 0.7em;
+            }
+
+            .footer-date {
+                margin-bottom: 10px;
+            }
+        }
+
+        /* Extra small screens (phones in portrait) */
+        @media screen and (max-width: 480px) {
+            body {
+                margin: 5px;
+                padding: 0;
+            }
+
+            .content-wrapper {
+                padding: 0;
+                margin: 0;
+                width: calc(100vw - 25px);
+                max-width: 100%;
+            }
+
+            #main-post-body {
+                padding: 0;
+                padding-bottom: 60px;
+            }
+
+            .archive-content {
+                padding: 0 5px;
+            }
+
+            .archive-content {
+                padding: 0 5px;
+            }
+
+            .archive-content h2 {
+                font-size: 1.6em;
+            }
+
+            .archive-content p {
+                font-size: 0.95em;
+                margin-bottom: 20px;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+
+            .header-container {
+                margin-bottom: 20px;
+                gap: 10px;
+            }
+
+            nav {
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            /* Further adjust figures for very small screens */
+            .figure-wrapper {
+                margin: 35px auto 15px auto; /* Compact spacing for small screens */
+            }
+
+            .figure-caption {
+                font-size: 0.75em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="content-wrapper">
+        <header class="header-container">
+            <svg id="random-sticker-svg" class="pixel-sticker" width="32" height="32" viewBox="0 0 4 4">
+                <!-- Randomized figure goes here -->
+            </svg>
+
+            <nav>
+                <a href="/">home</a>
+                <a href="/work">work</a>
+                <a href="/contact">contact</a>
+            </nav>
+        </header>
+
+        <div id="main-post-body">
+            <!-- Dynamic Field Notes will be inserted here -->
+            
+            <!-- Dynamic POST PAGE CONTENT will be inserted here -->
+            <div id="archive-content" class="archive-content">
+                <!-- Article content is now generated by JavaScript -->
+            </div>
+            
+            <!-- Article Footer -->
+            <div class="article-footer">
+                <div class="footer-star">-ˋˏ✄┈┈┈┈</div>
+                <div class="footer-date">Published October 03, 2025</div>
+                <br><br>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global variable to store the calculated primary color
+        let stickerFigureColor = '';
+        
+        /**
+         * The central configuration object for the entire article.
+         * This data is loaded from the server via JSON.
+         */
+        const articleData = {{ article_json|safe }};
+
+        // --- Color Generation Utilities ---
+        function hslToHex(h, s, l) {
+            s /= 100; l /= 100;
+            const k = n => (n + h / 30) % 12;
+            const a = s * Math.min(l, 1 - l);
+            const f = n =>
+                l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+            const toHex = val => Math.round(255 * val).toString(16).padStart(2, '0');
+            return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+        }
+
+        function generateBoldTriadicColors() {
+            const H1 = Math.floor(Math.random() * 360);
+            const S = Math.floor(Math.random() * 20) + 80; 
+            const L = Math.floor(Math.random() * 10) + 55; 
+
+            const C1 = hslToHex(H1, S, L);
+            const C2 = hslToHex((H1 + 120) % 360, S, L);
+            const C3 = hslToHex((H1 + 240) % 360, S, L); 
+
+            return [C1, C2, C3];
+        }
+        
+        // --- Sticker Generation Logic ---
+        function getRandomFigure() {
+            const colors = generateBoldTriadicColors();
+            const indexA = Math.floor(Math.random() * 3);
+            let indexB = (indexA + 1) % 3; 
+            if (Math.random() < 0.5) indexB = (indexA + 2) % 3;
+
+            const stickerColors = [colors[indexA], colors[indexB]];
+            const highlightColor = colors[2]; 
+
+            const P1 = stickerColors[0];
+            const P2 = stickerColors[1];
+            
+            stickerFigureColor = highlightColor; 
+
+            const patternTypes = [
+                () => `<polygon points="0,0 4,4 4,0" fill="${P1}" /><polygon points="0,0 4,4 0,4" fill="${P2}" />`,
+                () => `<rect x="0" y="0" width="2" height="2" fill="${P1}" /><rect x="2" y="0" width="2" height="2" fill="${P2}" /><rect x="0" y="2" width="2" height="2" fill="${P2}" /><rect x="2" y="2" width="2" height="2" fill="${P1}" />`,
+                () => `<rect x="0" y="0" width="2" height="4" fill="${P1}" /><rect x="2" y="0" width="2" height="4" fill="${P2}" />`,
+                () => `<rect x="0" y="0" width="4" height="4" fill="${P1}" />`,
+                () => `<circle cx="2" cy="2" r="2" fill="${P1}" />`,
+                () => `<polygon points="2,0 4,4 0,4" fill="${P1}" />`,
+                () => {
+                    const innerShapes = [`<rect x="1" y="1" width="2" height="2" fill="${P2}" />`, `<circle cx="2" cy="2" r="1" fill="${P2}" />`, `<polygon points="2,1 3.5,3.5 0.5,3.5" fill="${P2}" />`];
+                    return `<rect x="0" y="0" width="4" height="4" fill="${P1}" />${innerShapes[Math.floor(Math.random() * innerShapes.length)]}`;
+                }
+            ];
+            return patternTypes[Math.floor(Math.random() * patternTypes.length)]();
+        }
+
+        function randomizeSticker(randomizeFigure = true) {
+            const svgContainer = document.getElementById('random-sticker-svg');
+            
+            if (randomizeFigure) {
+                svgContainer.innerHTML = getRandomFigure();
+                const orientations = [0, 90, 180, 270];
+                const randomRotation = orientations[Math.floor(Math.random() * orientations.length)];
+                svgContainer.style.transform = `rotate(${randomRotation}deg)`;
+            }
+            document.documentElement.style.setProperty('--date-color', stickerFigureColor);
+        }
+
+        // --- Core Layout and Data Functions ---
+
+        /**
+         * Renders the article content and field notes from the articleData object.
+         */
+        function renderArticle() {
+            const archiveContent = document.getElementById('archive-content');
+            const mainPostBody = document.getElementById('main-post-body');
+
+            // 1. Render Body Content (h2, h3, p, figure)
+            articleData.body.forEach(item => {
+                let element;
+                
+                if (item.type === 'figure') {
+                    // --- Handle Figures (Images and Formulas) ---
+                    const figureWrapper = document.createElement('div');
+                    figureWrapper.className = 'figure-wrapper';
+                    
+                    let contentElement;
+
+                    if (item.figureType === 'image') {
+                        contentElement = document.createElement('img');
+                        contentElement.src = item.content;
+                        contentElement.alt = item.caption || `Figure ${item.id || ''}`;
+                        contentElement.className = 'figure-content'; 
+                        
+                    } else if (item.figureType === 'formula') {
+                        contentElement = document.createElement('div'); 
+                        contentElement.innerHTML = item.content; 
+                        contentElement.className = 'figure-formula';
+                    }
+                    
+                    if (contentElement) {
+                        figureWrapper.appendChild(contentElement);
+                    }
+
+                    if (item.caption) {
+                        const captionElement = document.createElement('div');
+                        captionElement.className = 'figure-caption';
+                        captionElement.textContent = item.caption;
+                        figureWrapper.appendChild(captionElement);
+                    }
+                    
+                    element = figureWrapper;
+                
+                } else if (['h2', 'h3', 'p'].includes(item.type)) {
+                    // --- Handle Text Blocks (h2, h3, p) ---
+                    element = document.createElement(item.type);
+                    element.innerHTML = item.text;
+                } else {
+                    console.error(`Unknown article item type: ${item.type}`);
+                    return;
+                }
+
+
+                if (item.id) {
+                    element.id = item.id;
+                }
+                archiveContent.appendChild(element);
+            });
+
+
+            // 2. Render Field Notes - Attach them to their target elements
+            articleData.fieldNotes.forEach((note, index) => {
+                const noteElement = document.createElement('div');
+                noteElement.id = `field-note-${index + 1}`;
+                noteElement.className = 'field-note';
+                
+                // Set data attributes from the object for positioning later
+                noteElement.setAttribute('data-position', note.position);
+                noteElement.setAttribute('data-target-id', note.targetId);
+                noteElement.setAttribute('data-start-line', note.startLine);
+                noteElement.setAttribute('data-end-line', note.endLine);
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'note-text';
+                textSpan.textContent = note.text;
+                
+                noteElement.appendChild(textSpan);
+                
+                // Attach the note to its target element, not to main-post-body
+                const targetElement = document.getElementById(note.targetId);
+                if (targetElement) {
+                    targetElement.appendChild(noteElement);
+                }
+            });
+            
+            // 3. Render Footer with Publication Date
+            renderFooter();
+        }
+
+        /**
+         * Renders the article footer with publication date from articleData
+         */
+        function renderFooter() {
+            const dateElement = document.querySelector('.footer-date');
+            if (dateElement) {
+                dateElement.textContent = `Published ${articleData.header.date}`;
+            }
+        }
+
+
+        // --- Positioning Utilities (Fixed Dynamic Bracketing) ---
+
+        function getVisualLineHeight(pElement) {
+            // Figures and headers are considered a single line block for notes
+            if (pElement.tagName !== 'P') {
+                // For figures, return the actual height including margins
+                if (pElement.classList.contains('figure-wrapper')) {
+                    const computedStyle = window.getComputedStyle(pElement);
+                    const marginTop = parseFloat(computedStyle.marginTop);
+                    const marginBottom = parseFloat(computedStyle.marginBottom);
+                    return pElement.offsetHeight + marginTop + marginBottom;
+                }
+                // For other elements (headers), return just the offset height
+                return pElement.offsetHeight;
+            }
+            
+            // For paragraphs, calculate the visual line height accounting for transform
+            const fontSize = parseFloat(window.getComputedStyle(pElement).fontSize);
+            const logicalLineHeightMultiplier = 1.9; // From CSS line-height
+            const verticalScale = 1.2; // From CSS transform scaleY
+            const visualLineHeight = (fontSize * logicalLineHeightMultiplier) * verticalScale;
+            return visualLineHeight;
+        }
+
+        function renderLineNumbers() {
+            // Check if line numbers should be shown
+            if (articleData.header.showLineNumbers === false) {
+                // Clean up old gutters if the setting was just switched off
+                document.querySelectorAll('.line-number-gutter').forEach(g => g.remove());
+                return;
+            }
+
+            // ONLY target paragraphs (<p>) to add line numbers
+            const paragraphs = document.querySelectorAll('#archive-content p');
+
+            // Clean up old gutters before rendering new ones
+            document.querySelectorAll('.line-number-gutter').forEach(g => g.remove());
+
+            paragraphs.forEach(p => {
+                // Get the computed styles for THIS specific paragraph
+                const computedStyle = window.getComputedStyle(p);
+                const fontSize = parseFloat(computedStyle.fontSize);
+                
+                // Calculate line height for THIS paragraph specifically
+                const baseLineHeight = fontSize * 1.9; // From CSS line-height: 1.9
+                const transformedLineHeight = baseLineHeight * 1.2; // From transform: scaleY(1.2)
+                
+                // Calculate number of lines based on actual content height
+                const contentHeight = p.scrollHeight; // Use scrollHeight for actual content height
+                const numLines = Math.round(contentHeight / baseLineHeight); // Use base height before transform
+                
+                if (numLines <= 0) return;
+
+                // Create the gutter and append it INSIDE the paragraph itself
+                // This makes it position relative to the paragraph, not the entire page
+                const gutter = document.createElement('div');
+                gutter.className = 'line-number-gutter';
+                gutter.setAttribute('data-target-id', p.id);
+                // No need to set top - it's positioned at the paragraph's top by default
+                
+                // Generate line numbers with the transformed line height for visual alignment
+                let linesHtml = '';
+                for (let i = 1; i <= numLines; i++) {
+                    const lineHeightStyle = `height: ${transformedLineHeight}px; line-height: ${transformedLineHeight}px;`;
+                    linesHtml += `<span class="line-number" style="${lineHeightStyle}">${i}</span>`;
+                }
+
+                gutter.innerHTML = linesHtml;
+                
+                // Append the gutter as the first child of the paragraph
+                // This makes it positioned relative to the paragraph itself
+                p.insertBefore(gutter, p.firstChild);
+            });
+        }
+
+        /**
+         * Renders block ID labels for elements that have IDs (for easier field note targeting)
+         */
+        function renderBlockIds() {
+            // Check if block IDs should be shown
+            if (articleData.header.showBlockIds === false) {
+                document.querySelectorAll('.block-id-label').forEach(label => label.remove());
+                return;
+            }
+
+            // Clean up old labels
+            document.querySelectorAll('.block-id-label').forEach(label => label.remove());
+
+            // Find all elements with IDs in the archive content
+            const elementsWithIds = document.querySelectorAll('#archive-content [id]');
+
+            elementsWithIds.forEach(element => {
+                const blockId = element.id;
+                if (!blockId) return;
+
+                const label = document.createElement('div');
+                label.className = 'block-id-label';
+                label.textContent = `#${blockId}`;
+                
+                // Insert the label as the first child
+                element.insertBefore(label, element.firstChild);
+            });
+        }
+        
+        /**
+         * Positions the field notes and dynamically generates the SVG brace height.
+         * Now works on a per-block basis - each note is positioned relative to its parent element.
+         */
+        function positionFieldNotes() {
+            const notes = document.querySelectorAll('.field-note');
+            if (!notes.length) return;
+
+            const BRACE_WIDTH = 25; 
+            const BRACE_CONTROL_X = 35; 
+
+            notes.forEach(noteElement => {
+                const startLine = parseInt(noteElement.getAttribute('data-start-line'));
+                const endLine = parseInt(noteElement.getAttribute('data-end-line'));
+                const position = noteElement.getAttribute('data-position');
+                
+                // The parent element is the target element (paragraph, figure, etc.)
+                const targetElement = noteElement.parentElement;
+                if (!targetElement || isNaN(startLine) || isNaN(endLine)) return;
+
+                // Calculate positioning RELATIVE TO THE PARENT ELEMENT
+                let calculatedTop = 0; // Start position within the parent
+                let calculatedHeight;
+                
+                if (targetElement.tagName === 'P') {
+                    // For paragraphs: calculate based on line numbers
+                    const computedStyle = window.getComputedStyle(targetElement);
+                    const fontSize = parseFloat(computedStyle.fontSize);
+                    
+                    // Calculate the actual line height for THIS paragraph
+                    const baseLineHeight = fontSize * 1.9; // From CSS line-height: 1.9
+                    const transformedLineHeight = baseLineHeight * 1.2; // From transform: scaleY(1.2)
+                    
+                    // Position: offset from the start of the paragraph to the start line
+                    calculatedTop = (startLine - 1) * transformedLineHeight;
+                    
+                    // Height: span from startLine to endLine (inclusive)
+                    const numLinesToBracket = endLine - startLine + 1;
+                    calculatedHeight = numLinesToBracket * transformedLineHeight;
+
+                } else {
+                    // For single-block elements (figures, headers): bracket the whole element
+                    calculatedTop = 0;
+                    calculatedHeight = targetElement.offsetHeight;
+                }
+
+                // Set the position and height of the note container
+                noteElement.style.top = `${calculatedTop}px`;
+
+                // Calculate vertical shift for centering the note text within the bracketed area
+                const noteText = noteElement.querySelector('.note-text');
+                const noteContentHeight = noteText.offsetHeight; 
+                const verticalShift = (calculatedHeight / 2) - (noteContentHeight / 2);
+
+                // Center the text content within the calculated height
+                noteText.style.transform = `translateY(${verticalShift}px) scaleY(1.2)`;
+
+                // Create and position the SVG brace
+                const color = getComputedStyle(document.documentElement).getPropertyValue('--date-color');
+                
+                const svgBrace = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svgBrace.setAttribute('class', 'note-brace');
+                svgBrace.setAttribute('viewBox', `0 0 ${BRACE_CONTROL_X} ${calculatedHeight}`);
+                svgBrace.setAttribute('width', `${BRACE_WIDTH}px`);
+                svgBrace.setAttribute('height', `${calculatedHeight}px`);
+                svgBrace.style.stroke = color;
+
+                // Path logic (opening AWAY from the main text)
+                let pathData;
+                if (position === 'left') {
+                    pathData = `M ${BRACE_CONTROL_X} 0 C 0 ${calculatedHeight * 0.25}, 0 ${calculatedHeight * 0.75}, ${BRACE_CONTROL_X} ${calculatedHeight}`;
+                } else {
+                    pathData = `M 0 0 C ${BRACE_CONTROL_X} ${calculatedHeight * 0.25}, ${BRACE_CONTROL_X} ${calculatedHeight * 0.75}, 0 ${calculatedHeight}`;
+                }
+
+                const pathElement = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                pathElement.setAttribute('d', pathData);
+                pathElement.setAttribute('vector-effect', 'non-scaling-stroke'); 
+                svgBrace.appendChild(pathElement);
+
+                // Remove old brace and add new one
+                const existingBrace = noteElement.querySelector('.note-brace');
+                if (existingBrace) {
+                    noteElement.removeChild(existingBrace);
+                }
+                
+                noteElement.prepend(svgBrace);
+            });
+        }
+        
+        // Initialization function
+        window.onload = function() {
+            // Renders the sticker and sets the dynamic color
+            randomizeSticker(true); 
+
+            // Renders all article content (h2, h3, p) and all field notes elements
+            renderArticle();
+            
+            // Runs all layout functions after the DOM and styles are computed
+            renderLineNumbers();
+            renderBlockIds();
+            positionFieldNotes();
+
+            // Recalculate notes and numbers on resize to maintain accurate positioning
+            window.addEventListener('resize', () => {
+                renderLineNumbers();
+                renderBlockIds();
+                positionFieldNotes();
+            });
+
+            // Render KaTeX formulas
+            if (typeof renderMathInElement === 'function') {
+                // Reruns on the entire body to catch the new formula elements
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ]
+                });
+            }
+        };
+    </script>
+    <!-- KaTeX JS for mathematical rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta na        /* Handwritten email styling */
+        #handwritten-email {
+            display: inline-block;
+            width: 400px; /* Increased width to accommodate full text */
+            height: 60px; /* Reduced height since text is quite thin */
+            overflow: hidden; /* Prevent scrolling */
+            border: 1px solid #ddd; /* Optional: visible box border */
+            padding: 5px;
+            box-sizing: border-box;
+        }rt" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Archive - Contact</title>
+    <style>
+        /* Minimal styling to enforce serif font and meet new requirements */
+        body {
+            font-family: serif;
+            margin: 20px;
+            line-height: 1.6; /* Improved readability */
+            color: #000; /* Ensure all body text is black */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        /* Prevent horizontal scroll globally */
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        /* Hide scrollbars but keep functionality */
+        * {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+        }
+        
+        *::-webkit-scrollbar {
+            display: none; /* Safari and Chrome */
+        }
+
+        /* Style for centering the content column */
+        .content-wrapper {
+            max-width: 600px; /* Sets a readable maximum width for the column */
+            margin: 0 auto; /* Centers the div horizontally */
+            width: 100%; /* Ensures it uses available space up to max-width */
+            box-sizing: border-box; /* Include padding in width calculation */
+        }
+
+        /* Home Page Paragraph Styling */
+        .home-content {
+            padding-top: 10px;
+        }
+        .home-content p {
+            /* Apply vertical stretch */
+            transform: scaleY(1.2); 
+            transform-origin: top left;
+            text-align: justify; /* Spaced to width */
+            font-size: 1.1em;
+            /* Increased line height to accommodate stretched text */
+            line-height: 1.9; 
+            margin: 0; /* Remove default paragraph margin */
+        }
+        
+        /* Layout for the Header: Sticker and Navigation on one line */
+        .header-container {
+            display: flex;
+            align-items: center; /* Vertically centers the nav and sticker */
+            gap: 20px; /* Space between sticker and nav */
+            margin-bottom: 40px; /* Increased space below the header for better separation */
+        }
+
+        /* Ensure navigation links appear next to each other and remove underline */
+        nav {
+            display: flex;
+            gap: 15px; 
+            /* Push the navigation to the far right */
+            margin-left: auto;
+        }
+        
+        /* Custom underline styling */
+        nav a {
+            text-decoration: none; /* Remove default underline */
+            color: initial; /* Default link color (same as body text) */
+            transition: color 0.1s;
+        }
+        
+        /* Apply wavy underline, inheriting the dynamic color */
+        nav a:hover {
+            color: var(--date-color); /* Change text color to dynamic color */
+            text-decoration: underline wavy; 
+            text-decoration-color: var(--date-color); /* Change underline color to dynamic color */
+            text-underline-offset: 4px; /* Slight offset for readability */
+            cursor: pointer;
+        }
+
+        /* Styling for the sticker (Static - no transitions/animations) */
+        .pixel-sticker {
+            display: block;
+            transform-origin: center; /* Ensures rotation is around the sticker's center */
+        }
+
+        /* Email container styling */
+        .email-container {
+            text-align: right;
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end; /* Align to far right */
+        }
+
+        /* Simple email styling */
+        #email-display {
+            font-family: serif;
+            font-style: italic;
+            color: var(--date-color, #000000);
+            font-size: 1.1em;
+        }
+
+        /* Ensure GIF animations work properly */
+        #email-display img {
+            max-width: 100%;
+            height: auto;
+            /* Force GIF animation to play */
+            animation: none !important;
+            /* Prevent any transform that might interfere */
+            transform: none !important;
+            /* Ensure visibility */
+            opacity: 1 !important;
+            /* Remove any filters that might interfere */
+            filter: none !important;
+        }
+
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            body {
+                margin: 10px;
+                padding: 0;
+            }
+
+            .content-wrapper {
+                max-width: 100%;
+                width: calc(100vw - 25px);
+                padding: 0;
+                margin: 0 auto;
+                box-sizing: border-box;
+            }
+
+            .header-container {
+                margin-bottom: 25px;
+                gap: 15px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .contact-content p {
+                font-size: 1em;
+                line-height: 1.8;
+                margin-bottom: 25px;
+                word-wrap: break-word;
+            }
+
+            #email-display {
+                font-size: 1em;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+        }
+
+        /* Extra small screens (phones in portrait) */
+        @media screen and (max-width: 480px) {
+            body {
+                margin: 5px;
+                padding: 0;
+            }
+
+            .content-wrapper {
+                padding: 0;
+                width: calc(100vw - 25px);
+                max-width: 100%;
+            }
+
+            .contact-content p {
+                font-size: 0.95em;
+                margin-bottom: 20px;
+                word-wrap: break-word;
+            }
+
+            .header-container {
+                margin-bottom: 20px;
+                gap: 10px;
+            }
+
+            nav {
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            #email-display {
+                font-size: 0.95em;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="content-wrapper">
+        <header class="header-container">
+            <!-- 
+                2D Sticker container. Reduced size to 32x32 for pixelated look.
+                The content is a procedural geometric figure dynamically inserted by JavaScript.
+            -->
+            <svg id="random-sticker-svg" class="pixel-sticker" width="32" height="32" viewBox="0 0 4 4">
+                <!-- Fallback content, overwritten by JS -->
+            </svg>
+
+            <!-- Navigation (moved to the far right) -->
+            <nav>
+                <a href="/">home</a>
+                <a href="/work">work</a>
+                <a href="#">contact</a>
+            </nav>
+        </header>
+
+        <!-- Contact Page Content -->
+        <div class="home-content">
+            <p>For inquiries regarding new collaborations, project requests, or to discuss any item within the archive, please reach out via the provided email address. Direct communication is preferred to maintain the clarity and efficiency that this site attempts to embody. All messages are reviewed promptly, and a dedicated response can be expected within two working days. This method ensures all initial contact is processed with intentionality and focus on the scope of work.</p>
+            
+            <!-- Email address aligned to the right -->
+            <div class="email-container">
+                <div id="email-display"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global variable to store the calculated primary color
+        let stickerFigureColor = '';
+
+        // --- Color Generation Utilities (Updated for Triadic Colors) ---
+        function hslToHex(h, s, l) {
+            s /= 100;
+            l /= 100;
+            const k = n => (n + h / 30) % 12;
+            const a = s * Math.min(l, 1 - l);
+            const f = n =>
+                l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+            const toHex = val => Math.round(255 * val).toString(16).padStart(2, '0');
+            return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+        }
+
+        /**
+         * Generates three bold, bright colors forming a Triadic Color Scheme.
+         * Returns an array [C1, C2, C3]. C3 is used for the primary highlight color.
+         */
+        function generateBoldTriadicColors() {
+            const H1 = Math.floor(Math.random() * 360);
+            const S = Math.floor(Math.random() * 20) + 80; // 80-100% Saturation (Bold)
+            const L = Math.floor(Math.random() * 10) + 55; // 55-65% Lightness (Bright)
+
+            const C1 = hslToHex(H1, S, L);
+            const H2 = (H1 + 120) % 360;
+            const C2 = hslToHex(H2, S, L);
+            const H3 = (H1 + 240) % 360; // Third color in the triad, used for highlight
+            const C3 = hslToHex(H3, S, L);
+
+            return [C1, C2, C3];
+        }
+        
+        // --- Sticker Generation Logic ---
+        function getRandomFigure() {
+            const colors = generateBoldTriadicColors();
+            // Randomly select two colors for the sticker (C_A and C_B)
+            const indexA = Math.floor(Math.random() * 3);
+            let indexB = (indexA + 1) % 3; 
+            if (Math.random() < 0.5) indexB = (indexA + 2) % 3;
+
+            const stickerColors = [colors[indexA], colors[indexB]];
+            
+            // C3 is now the dedicated highlight color for the nav hover
+            const highlightColor = colors[2]; 
+
+            const P1 = stickerColors[0];
+            const P2 = stickerColors[1];
+            
+            stickerFigureColor = highlightColor; // Set the C3 color globally for CSS variable
+
+            const patternTypes = [
+                () => `<polygon points="0,0 4,4 4,0" fill="${P1}" /><polygon points="0,0 4,4 0,4" fill="${P2}" />`,
+                () => `<rect x="0" y="0" width="2" height="2" fill="${P1}" /><rect x="2" y="0" width="2" height="2" fill="${P2}" /><rect x="0" y="2" width="2" height="2" fill="${P2}" /><rect x="2" y="2" width="2" height="2" fill="${P1}" />`,
+                () => `<rect x="0" y="0" widtah="2" height="4" fill="${P1}" /><rect x="2" y="0" width="2" height="4" fill="${P2}" />`,
+                () => `<rect x="0" y="0" width="4" height="4" fill="${P1}" />`,
+                () => `<circle cx="2" cy="2" r="2" fill="${P1}" />`,
+                () => `<polygon points="2,0 4,4 0,4" fill="${P1}" />`,
+                () => {
+                    const innerShapes = [`<rect x="1" y="1" width="2" height="2" fill="${P2}" />`, `<circle cx="2" cy="2" r="1" fill="${P2}" />`, `<polygon points="2,1 3.5,3.5 0.5,3.5" fill="${P2}" />`];
+                    return `<rect x="0" y="0" width="4" height="4" fill="${P1}" />${innerShapes[Math.floor(Math.random() * innerShapes.length)]}`;
+                }
+            ];
+            return patternTypes[Math.floor(Math.random() * patternTypes.length)]();
+        }
+
+        function randomizeSticker(randomizeFigure = true) {
+            const svgContainer = document.getElementById('random-sticker-svg');
+            
+            if (randomizeFigure) {
+                // 1. Generate the complex randomized figure SVG
+                svgContainer.innerHTML = getRandomFigure();
+
+                // 2. Randomize Orientation (0, 90, 180, 270 degrees)
+                const orientations = [0, 90, 180, 270];
+                const randomRotation = orientations[Math.floor(Math.random() * orientations.length)];
+                svgContainer.style.transform = `rotate(${randomRotation}deg)`;
+            }
+
+            // Set CSS Variable for use in the dynamic underline on hover
+            document.documentElement.style.setProperty('--date-color', stickerFigureColor);
+        }
+
+        // Initialization function
+        window.onload = function() {
+            randomizeSticker(true); // Initial sticker randomization and color setting
+            
+            // Display simple email address
+            displayEmail();
+        };
+
+        // Function to display simple email
+        function displayEmail() {
+            const emailContainer = document.getElementById('email-display');
+            
+            // Create img element with the suspicious.gif file
+            const img = document.createElement('img');
+            img.alt = "Contact Email";
+            img.src = "./static/suspicious.gif";
+            
+            // Clear container and add image
+            emailContainer.innerHTML = '';
+            emailContainer.appendChild(img);
+        }
+    </script>
+</body>
+</html>

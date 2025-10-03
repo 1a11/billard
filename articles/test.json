@@ -1,0 +1,67 @@
+{
+  "header": {
+    "mainHeader": "The Digital Monolith: Structure and Minimalism",
+    "date": "October 03, 2025",
+    "showLineNumbers": false,
+    "showBlockIds": false
+  },
+  "body": [
+    {
+      "type": "h2",
+      "text": "The Digital Monolith: Structure and Minimalism"
+    },
+    {
+      "type": "p",
+      "id": "p-monolith",
+      "text": "The core concept of this page design is to enforce a rigid, singular focus. By limiting the presentation to a single, centered column, we eliminate the visual distractions common in modern web development. Every element—from the heading hierarchy to the text stretching—is an intentional choice to guide the reader through the content linearly and deliberately. This structure is intended to feel dense and editorial, prioritizing content consumption over interactive exploration."
+    },
+    {
+      "type": "figure",
+      "figureType": "image",
+      "content": "https://placehold.co/600x250/3498db/FFFFFF?text=VISUAL+ELEMENT",
+      "caption": "Figure 1: A conceptual visual element used to demonstrate centered media rendering on the page.",
+      "id": "fig-image"
+    },
+    {
+      "type": "h3",
+      "text": "Intentional Spacing and Visual Consistency"
+    },
+    {
+      "type": "p",
+      "id": "p-spacing",
+      "text": "Consistency in spacing is crucial for maintaining the \"pretty structure\" you requested. We use large, fixed margins between structural elements (like the $30 \\text{px}$ before subheadings and the $25 \\text{px}$ between paragraphs) to create clear, predictable vertical rhythm. This rigid structure allows the single point of visual variance—the random triadic sticker—to act as the site's signature, confirming the procedural generation without disrupting the calm, textual flow of the post."
+    },
+    {
+      "type": "figure",
+      "figureType": "formula",
+      "content": "$$\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}$$",
+      "caption": "Equation 1: Gauss's Law for electric fields, demonstrating centered formula display and captioning.",
+      "id": "fig-formula"
+    },
+    {
+      "type": "h3",
+      "text": "Typographic Tension: The Vertical Axis"
+    },
+    {
+      "type": "p",
+      "id": "p-tension",
+      "text": "The vertical scaling of the serif text ($\\text{scaleY}(1.2)$) generates a unique typographic tension. It makes the letters tall and slightly narrow, giving the text block a dense, almost compressed look, which contrasts sharply with the ample line spacing. This choice is deliberate, aiming to make the act of reading feel intentional, pulling the user away from the rapid skimming that dominates digital habits. The content of the post now follows this exact aesthetic."
+    }
+  ],
+  "fieldNotes": [
+    {
+      "targetId": "p-monolith",
+      "startLine": 1,
+      "endLine": 4,
+      "position": "right",
+      "text": "This rhythmic spacing is designed to give the reader an optical break, preventing burnout from the dense, justified text block."
+    },
+    {
+      "targetId": "p-tension",
+      "startLine": 1,
+      "endLine": 3,
+      "position": "left",
+      "text": "We intentionally avoided common sans-serif scaling to preserve the editorial, printed feel."
+    }
+  ]
+}

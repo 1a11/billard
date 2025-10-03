@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Archive - Home</title>
+    <style>
+        .content-wrapper {
+            padding: 0 5px;
+            width: 100%;
+        }
+
+            .home-content p {
+                font-size: 0.95em;
+                margin-bottom: 20px;
+                word-wrap: break-word;
+            }
+
+            .header-container {
+                margin-bottom: 20px;
+                gap: 10px;
+            }
+
+            nav {
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+    </style>
+</head>
+<body>
+    <style>
+        body {
+            font-family: serif;
+            margin: 20px;
+            line-height: 1.6; /* Improved readability */
+            color: #000; /* Ensure all body text is black */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        /* Prevent horizontal scroll globally */
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        /* Hide scrollbars but keep functionality */
+        * {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+        }
+        
+        *::-webkit-scrollbar {
+            display: none; /* Safari and Chrome */
+        }
+
+        /* Style for centering the content column */
+        .content-wrapper {
+            max-width: 600px; /* Sets a readable maximum width for the column */
+            margin: 0 auto; /* Centers the div horizontally */
+            width: 100%; /* Ensures it uses available space up to max-width */
+            box-sizing: border-box; /* Include padding in width calculation */
+        }
+
+        /* Home Page Paragraph Styling */
+        .home-content {
+            padding-top: 10px;
+        }
+        .home-content p {
+            /* Apply vertical stretch */
+            transform: scaleY(1.2); 
+            transform-origin: top left;
+            text-align: justify; /* Spaced to width */
+            font-size: 1.1em;
+            /* Increased line height to accommodate stretched text */
+            line-height: 1.9; 
+            margin: 0 0 35px 0; /* Match article paragraph spacing */
+        }
+
+        /* Latest Article Styling - matching work.html */
+        .latest-article {
+            margin-top: 40px;
+        }
+
+        .latest-article h2 {
+            color: #000;
+            font-size: 1em;
+            margin-bottom: 5px;
+        }
+
+        .latest-article ul {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 5px;
+        }
+
+        .latest-article li {
+            font-family: sans-serif;
+            margin-bottom: 4px;
+            display: flex;
+        }
+
+        .latest-article li > a {
+            color: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+            font-family: serif;
+            transform: scaleY(1.2);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .dot-filler {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            margin: 0 8px;
+            text-align: left;
+        }
+
+        .article-date {
+            white-space: nowrap;
+        }
+        
+        /* Layout for the Header: Sticker and Navigation on one line */
+        .header-container {
+            display: flex;
+            align-items: center; /* Vertically centers the nav and sticker */
+            gap: 20px; /* Space between sticker and nav */
+            margin-bottom: 40px; /* Increased space below the header for better separation */
+        }
+
+        /* Ensure navigation links appear next to each other and remove underline */
+        nav {
+            display: flex;
+            gap: 15px; 
+            /* Push the navigation to the far right */
+            margin-left: auto;
+        }
+        
+        /* Custom underline styling */
+        nav a {
+            text-decoration: none; /* Remove default underline */
+            color: initial; /* Default link color (same as body text) */
+            transition: color 0.1s;
+        }
+        
+        /* Apply wavy underline, inheriting the dynamic color */
+        nav a:hover {
+            color: var(--date-color); /* Change text color to dynamic color */
+            text-decoration: underline wavy; 
+            text-decoration-color: var(--date-color); /* Change underline color to dynamic color */
+            text-underline-offset: 4px; /* Slight offset for readability */
+            cursor: pointer;
+        }
+
+        /* Styling for the sticker (Static - no transitions/animations) */
+        .pixel-sticker {
+            display: block;
+            transform-origin: center; /* Ensures rotation is around the sticker's center */
+        }
+
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            body {
+                margin: 10px;
+                padding: 0;
+            }
+
+            .content-wrapper {
+                max-width: 100%;
+                width: calc(100vw - 25px);
+                padding: 0;
+                margin: 0 auto;
+                box-sizing: border-box;
+            }
+
+            .header-container {
+                margin-bottom: 25px;
+                gap: 15px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .home-content p {
+                font-size: 1em;
+                line-height: 1.8;
+                margin-bottom: 25px;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+
+            .latest-article h2 {
+                font-size: 0.95em;
+            }
+
+            .latest-article li {
+                width: 100%;
+                box-sizing: border-box;
+                max-width: 100%;
+            }
+
+            .latest-article li > a {
+                font-size: 0.95em;
+                white-space: normal;
+                word-wrap: break-word;
+                max-width: 70%;
+            }
+
+            .article-date {
+                font-size: 0.85em;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .dot-filler {
+                min-width: 10px;
+                flex-shrink: 1;
+            }
+        }
+
+        /* Extra small screens (phones in portrait) */
+        @media screen and (max-width: 480px) {
+            body {
+                margin: 5px;
+                padding: 0;
+            }
+
+            .content-wrapper {
+                padding: 0;
+                width: calc(100vw - 25px);
+                max-width: 100%;
+            }
+
+            .home-content p {
+                font-size: 0.95em;
+                margin-bottom: 20px;
+                word-wrap: break-word;
+            }
+
+            .header-container {
+                margin-bottom: 20px;
+                gap: 10px;
+            }
+
+            nav {
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .latest-article li > a {
+                font-size: 0.9em;
+                max-width: 65%;
+            }
+
+            .article-date {
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="content-wrapper">
+        <header class="header-container">
+            <!-- 
+                2D Sticker container. Reduced size to 32x32 for pixelated look.
+                The content is a procedural geometric figure dynamically inserted by JavaScript.
+            -->
+            <svg id="random-sticker-svg" class="pixel-sticker" width="32" height="32" viewBox="0 0 4 4">
+                <!-- Fallback content, overwritten by JS -->
+            </svg>
+
+            <!-- Navigation (moved to the far right) -->
+            <nav>
+                <a href="/">home</a>
+                <a href="/work">work</a>
+                <a href="/contact">contact</a>
+            </nav>
+        </header>
+
+        <!-- Home Page Content -->
+        <div class="home-content">
+            <p>Welcome to the digital corner of the internet. This space serves as a minimal, procedural archive designed to catalog creative and technical projects across various disciplines, ranging from complex internal tooling to abstract design methodologies.</p>
+            
+            <!-- Latest Article -->
+            <div class="latest-article">
+                {% if latest_article %}
+                    <h2>Latest</h2>
+                    <ul>
+                        <li>
+                            <a href="/article/{{ latest_article.slug }}">{{ latest_article.title|lower }}</a>
+                            <span class="dot-filler"></span>
+                            <span class="article-date">{{ latest_article.date_str }}</span>
+                        </li>
+                    </ul>
+                {% else %}
+                    <h2>Latest</h2>
+                    <ul>
+                        <li>No articles yet.</li>
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden element for measuring dot width -->
+    <span id="dot-measure" style="visibility: hidden; position: absolute; font-family: sans-serif; height: 0; overflow: hidden; white-space: nowrap;">.</span>
+    
+    <script>
+        // Global variable to store the calculated primary color
+        let stickerFigureColor = '';
+
+        // --- Color Generation Utilities (Updated for Triadic Colors) ---
+        function hslToHex(h, s, l) {
+            s /= 100;
+            l /= 100;
+            const k = n => (n + h / 30) % 12;
+            const a = s * Math.min(l, 1 - l);
+            const f = n =>
+                l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+            const toHex = val => Math.round(255 * val).toString(16).padStart(2, '0');
+            return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+        }
+
+        /**
+         * Generates three bold, bright colors forming a Triadic Color Scheme.
+         * Returns an array [C1, C2, C3]. C3 is used for the primary highlight color.
+         */
+        function generateBoldTriadicColors() {
+            const H1 = Math.floor(Math.random() * 360);
+            const S = Math.floor(Math.random() * 20) + 80; // 80-100% Saturation (Bold)
+            const L = Math.floor(Math.random() * 10) + 55; // 55-65% Lightness (Bright)
+
+            const C1 = hslToHex(H1, S, L);
+            const H2 = (H1 + 120) % 360;
+            const C2 = hslToHex(H2, S, L);
+            const H3 = (H1 + 240) % 360; // Third color in the triad, used for highlight
+            const C3 = hslToHex(H3, S, L);
+
+            return [C1, C2, C3];
+        }
+        
+        // --- Sticker Generation Logic ---
+        function getRandomFigure() {
+            const colors = generateBoldTriadicColors();
+            // Randomly select two colors for the sticker (C_A and C_B)
+            const indexA = Math.floor(Math.random() * 3);
+            let indexB = (indexA + 1) % 3; 
+            if (Math.random() < 0.5) indexB = (indexA + 2) % 3;
+
+            const stickerColors = [colors[indexA], colors[indexB]];
+            
+            // C3 is now the dedicated highlight color for the nav hover
+            const highlightColor = colors[2]; 
+
+            const P1 = stickerColors[0];
+            const P2 = stickerColors[1];
+            
+            stickerFigureColor = highlightColor; // Set the C3 color globally for CSS variable
+
+            const patternTypes = [
+                () => `<polygon points="0,0 4,4 4,0" fill="${P1}" /><polygon points="0,0 4,4 0,4" fill="${P2}" />`,
+                () => `<rect x="0" y="0" width="2" height="2" fill="${P1}" /><rect x="2" y="0" width="2" height="2" fill="${P2}" /><rect x="0" y="2" width="2" height="2" fill="${P2}" /><rect x="2" y="2" width="2" height="2" fill="${P1}" />`,
+                () => `<rect x="0" y="0" width="2" height="4" fill="${P1}" /><rect x="2" y="0" width="2" height="4" fill="${P2}" />`,
+                () => `<rect x="0" y="0" width="4" height="4" fill="${P1}" />`,
+                () => `<circle cx="2" cy="2" r="2" fill="${P1}" />`,
+                () => `<polygon points="2,0 4,4 0,4" fill="${P1}" />`,
+                () => {
+                    const innerShapes = [`<rect x="1" y="1" width="2" height="2" fill="${P2}" />`, `<circle cx="2" cy="2" r="1" fill="${P2}" />`, `<polygon points="2,1 3.5,3.5 0.5,3.5" fill="${P2}" />`];
+                    return `<rect x="0" y="0" width="4" height="4" fill="${P1}" />${innerShapes[Math.floor(Math.random() * innerShapes.length)]}`;
+                }
+            ];
+            return patternTypes[Math.floor(Math.random() * patternTypes.length)]();
+        }
+
+        function randomizeSticker(randomizeFigure = true) {
+            const svgContainer = document.getElementById('random-sticker-svg');
+            
+            if (randomizeFigure) {
+                // 1. Generate the complex randomized figure SVG
+                svgContainer.innerHTML = getRandomFigure();
+
+                // 2. Randomize Orientation (0, 90, 180, 270 degrees)
+                const orientations = [0, 90, 180, 270];
+                const randomRotation = orientations[Math.floor(Math.random() * orientations.length)];
+                svgContainer.style.transform = `rotate(${randomRotation}deg)`;
+            }
+
+            // Set CSS Variable for use in the dynamic underline on hover
+            document.documentElement.style.setProperty('--date-color', stickerFigureColor);
+        }
+
+        // --- Dot Filling Logic (from work.html) ---
+        let dotWidth = 0;
+
+        function measureDotWidth() {
+            const measureElement = document.getElementById('dot-measure');
+            if (measureElement) {
+                measureElement.textContent = '.';
+                dotWidth = measureElement.offsetWidth;
+            }
+        }
+
+        function fillDots() {
+            const dotFillers = document.querySelectorAll('.dot-filler');
+            
+            dotFillers.forEach(filler => {
+                const li = filler.parentElement;
+                const nameLink = li.querySelector('a');
+                const dateSpan = li.querySelector('.article-date');
+                
+                if (!nameLink || !dateSpan) return;
+                
+                const nameWidth = nameLink.offsetWidth;
+                const dateWidth = dateSpan.offsetWidth;
+                const liWidth = li.offsetWidth;
+                
+                const margin = 16; // 8px on each side
+                const availableWidth = liWidth - nameWidth - dateWidth - margin;
+                
+                if (dotWidth > 0) {
+                    const numDots = Math.floor(availableWidth / dotWidth);
+                    filler.textContent = '.'.repeat(Math.max(0, numDots));
+                }
+            });
+            
+            // Set date colors to the sticker color
+            const dateSpans = document.querySelectorAll('.article-date');
+            dateSpans.forEach(span => {
+                span.style.color = stickerFigureColor;
+            });
+        }
+
+        // Initialization function
+        window.onload = function() {
+            randomizeSticker(true); // Initial sticker randomization and color setting
+            measureDotWidth();
+            fillDots();
+        };
+
+        // Refill dots on window resize
+        window.addEventListener('resize', fillDots);
+    </script>
+</body>
+</html>
