@@ -1,15 +1,57 @@
-from flask import Flask, render_template, jsonify, abort
-import json
 import os
+import re
+import json
+import calendar
+import secrets
+import requests
+
 from datetime import datetime
 from collections import defaultdict
-import re
-import calendar
+from functools import wraps
+
+from flask import Flask, render_template, jsonify, abort, request, redirect, url_for
+from mohawk import Receiver
+from mohawk.exc import HawkFail
 
 app = Flask(__name__, template_folder='templates')
 
 # Directory where article JSON files are stored
 ARTICLES_DIR = 'articles'
+
+# one shared credential (rotate when needed)
+CREDENTIALS = {
+    "billard": {"id": "billard", "key": "SUPER_LONG_RANDOM_SECRET", "algorithm": "sha256"}
+}
+
+def lookup_credentials(creds_id):
+    return CREDENTIALS.get(creds_id)
+
+def content_handler(req):
+    # return raw body and content type for payload validation
+    return request.get_data(), request.headers.get("Content-Type", "")
+
+def require_hawk_auth(f):
+    """
+    Decorator to require HAWK authentication for a route
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            Receiver(
+                credentials_map=lookup_credentials,
+                request_header=request.headers.get("Authorization"),
+                url=request.url,
+                method=request.method,
+                content=content_handler(None)[0],
+                content_type=content_handler(None)[1],
+                seen_nonce=None
+            )
+        except HawkFail as e:
+            abort(401)
+        
+        return f(*args, **kwargs)
+    
+    return decorated_function
 
 def parse_article_filename(filename):
     """
@@ -19,7 +61,10 @@ def parse_article_filename(filename):
     if not filename.endswith('.json'):
         return None
     
+    # Remove .json extension
     name_without_ext = filename[:-5]
+    
+    # Match pattern: name_month-day
     match = re.match(r'^(.+)_(\d{1,2})-(\d{1,2})$', name_without_ext)
     if match:
         name, month, day = match.groups()
@@ -49,6 +94,7 @@ def get_all_articles():
                     data = json.load(f)
                     title = data.get('header', {}).get('mainHeader', name.replace('_', ' ').title())
                     
+                    # Try to parse year from the full date in the header
                     full_date = data.get('header', {}).get('date', '')
                     year = current_year
                     if full_date:
@@ -57,6 +103,8 @@ def get_all_articles():
                             year = parsed_date.year
                         except:
                             pass
+                    
+                    # Format date as "MMM, DD" (e.g., "Dec, 24")
                     month_name = calendar.month_abbr[month]
                     date_str = f"{month_name}, {day:02d}"
                     
@@ -76,6 +124,7 @@ def get_all_articles():
                 'year': year
             })
     
+    # Sort by year (descending), then month (descending), then day (descending)
     articles.sort(key=lambda x: (x['year'], x['month'], x['day']), reverse=True)
     
     return articles
@@ -102,6 +151,7 @@ def article(slug):
     Article page - loads article data from JSON and renders article.html template
     slug is the article name (without month-day)
     """
+    # Find the article file matching this slug
     articles = get_all_articles()
     article_data = None
     
@@ -115,6 +165,7 @@ def article(slug):
     if not article_data:
         abort(404)
     
+    # Render the article template with the JSON data embedded
     return render_template('article.html', article_json=json.dumps(article_data))
 
 @app.route('/work')
@@ -128,6 +179,49 @@ def work():
 def contact():
     """Contact page"""
     return render_template('contact.html')
+
+@app.post("/admin/upload")
+@require_hawk_auth
+def upload():
+    article_data = request.get_json()
+    if not article_data:
+        abort(400)
+    
+    header = article_data.get('header', {})
+    name = header.get('name', 'untitled').replace(' ', '_')
+    date_str = header.get('date', '')
+    try:
+        date_obj = datetime.strptime(date_str, '%B %d, %Y')
+        month = date_obj.month
+        day = date_obj.day
+    except:
+        month = 1
+        day = 1
+        date_obj = datetime(datetime.now().year, month, day)
+    filename = f"{name}_{month}-{day}.json"
+    filepath = os.path.join(ARTICLES_DIR, filename)
+    os.makedirs(ARTICLES_DIR, exist_ok=True)
+    # Change article data upoad date, add upload time
+    article_data['header']['date'] = article_data['header']['date'] + " " + datetime.now().strftime('%H:%M:%S')
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(article_data, f, ensure_ascii=False, indent=2)
+
+
+    return jsonify({"ok": True}), 201
+
+@app.post("/admin/remove")
+@require_hawk_auth
+def remove():
+    data = request.get_json()
+    if not data or 'filename' not in data:
+        abort(400)
+    filename = data['filename']
+    filepath = os.path.join(ARTICLES_DIR, filename)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    else:
+        abort(404)
+    return jsonify({"ok": True}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

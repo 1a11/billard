@@ -5,8 +5,11 @@ description = "Personal blog with subscription support and MySQL database"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "cryptography>=46.0.2",
     "flask>=2.3.0",
+    "mohawk>=1.1.0",
     "mysql-connector-python>=8.0.0",
+    "requests>=2.32.5",
 ]
 
 [project.optional-dependencies]
