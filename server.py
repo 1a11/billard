@@ -15,12 +15,13 @@ from mohawk.exc import HawkFail
 
 app = Flask(__name__, template_folder='templates')
 
-# Directory where article JSON files are stored
 ARTICLES_DIR = 'articles'
-
-# one shared credential (rotate when needed)
 CREDENTIALS = {
-    "billard": {"id": "billard", "key": "SUPER_LONG_RANDOM_SECRET", "algorithm": "sha256"}
+    "billard": {
+        "id": "billard", 
+        "key": os.environ.get("HAWK_KEY", "SUPER_LONG_RANDOM_SECRET"),
+        "algorithm": "sha256"
+    }
 }
 
 def lookup_credentials(creds_id):
