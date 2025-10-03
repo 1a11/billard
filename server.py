@@ -19,10 +19,7 @@ def parse_article_filename(filename):
     if not filename.endswith('.json'):
         return None
     
-    # Remove .json extension
     name_without_ext = filename[:-5]
-    
-    # Match pattern: name_month-day
     match = re.match(r'^(.+)_(\d{1,2})-(\d{1,2})$', name_without_ext)
     if match:
         name, month, day = match.groups()
@@ -52,7 +49,6 @@ def get_all_articles():
                     data = json.load(f)
                     title = data.get('header', {}).get('mainHeader', name.replace('_', ' ').title())
                     
-                    # Try to parse year from the full date in the header
                     full_date = data.get('header', {}).get('date', '')
                     year = current_year
                     if full_date:
@@ -61,8 +57,6 @@ def get_all_articles():
                             year = parsed_date.year
                         except:
                             pass
-                    
-                    # Format date as "MMM, DD" (e.g., "Dec, 24")
                     month_name = calendar.month_abbr[month]
                     date_str = f"{month_name}, {day:02d}"
                     
@@ -82,7 +76,6 @@ def get_all_articles():
                 'year': year
             })
     
-    # Sort by year (descending), then month (descending), then day (descending)
     articles.sort(key=lambda x: (x['year'], x['month'], x['day']), reverse=True)
     
     return articles
@@ -109,7 +102,6 @@ def article(slug):
     Article page - loads article data from JSON and renders article.html template
     slug is the article name (without month-day)
     """
-    # Find the article file matching this slug
     articles = get_all_articles()
     article_data = None
     
@@ -123,7 +115,6 @@ def article(slug):
     if not article_data:
         abort(404)
     
-    # Render the article template with the JSON data embedded
     return render_template('article.html', article_json=json.dumps(article_data))
 
 @app.route('/work')
