@@ -19,10 +19,13 @@ ARTICLES_DIR = 'articles'
 CREDENTIALS = {
     "billard": {
         "id": "billard", 
-        "key": os.environ.get("HAWK_KEY", "SUPER_LONG_RANDOM_SECRET"),
+        "key": os.environ.get("HAWK_KEY", None),
         "algorithm": "sha256"
     }
 }
+
+if not CREDENTIALS["billard"]["key"]:
+    raise ValueError("HAWK_KEY environment variable not set. Engine will not start.")
 
 def lookup_credentials(creds_id):
     return CREDENTIALS.get(creds_id)
@@ -65,6 +68,9 @@ def parse_article_filename(filename):
     # Remove .json extension
     name_without_ext = filename[:-5]
     
+    if len(name_without_ext) > 20:
+        return None
+
     # Match pattern: name_month-day
     match = re.match(r'^(.+)_(\d{1,2})-(\d{1,2})$', name_without_ext)
     if match:
@@ -110,7 +116,7 @@ def get_all_articles():
                     date_str = f"{month_name}, {day:02d}"
                     
             except:
-                title = name.replace('_', ' ').title()
+                title = "Failed to load article title :("
                 month_name = calendar.month_abbr[month]
                 date_str = f"{month_name}, {day:02d}"
                 year = current_year
@@ -199,6 +205,11 @@ def upload():
         month = 1
         day = 1
         date_obj = datetime(datetime.now().year, month, day)
+    
+    name = name.replace('/', '_').replace('\\', '_')
+    if len(name) > 20:
+        name = name[:20]
+
     filename = f"{name}_{month}-{day}.json"
     filepath = os.path.join(ARTICLES_DIR, filename)
     os.makedirs(ARTICLES_DIR, exist_ok=True)
@@ -217,7 +228,11 @@ def remove():
     if not data or 'filename' not in data:
         abort(400)
     filename = data['filename']
+    filename = filename.replace('/', '_').replace('\\', '_')
+    if not filename.endswith('.json'):
+        abort(400)
     filepath = os.path.join(ARTICLES_DIR, filename)
+     
     if os.path.exists(filepath):
         os.remove(filepath)
     else:
@@ -225,4 +240,4 @@ def remove():
     return jsonify({"ok": True}), 200
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)
