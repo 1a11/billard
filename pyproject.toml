@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "billard"
 version = "0.1.0"
@@ -18,3 +22,7 @@ dev = [
     "black>=23.0.0",
     "flake8>=5.0.0",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["static", "templates", "articles"]
