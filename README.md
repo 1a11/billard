@@ -2,6 +2,12 @@
 
 A minimal, procedurally-styled blog system with dynamic article loading, field notes (bracket comments), and HAWK-authenticated admin API.
 
+## Docker Hub
+
+```
+docker pull commanderfish/billard-blog
+```
+
 ## Structure
 
 ```
@@ -254,3 +260,4 @@ Content-Type: application/json
 - Article versioning and drafts
 - Search functionality
 - RSS feed generation
+
