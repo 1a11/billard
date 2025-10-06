@@ -69,7 +69,7 @@ def parse_article_filename(filename):
     name_without_ext = filename[:-5]
     
     if len(name_without_ext) > 20:
-        return None
+        name_without_ext = name_without_ext[:20]
 
     # Match pattern: name_month-day
     match = re.match(r'^(.+)_(\d{1,2})-(\d{1,2})$', name_without_ext)
