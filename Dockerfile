@@ -1,19 +1,9 @@
 FROM python:alpine
-
 WORKDIR /app
-
-
-
-RUN apk add --no-cache \
-    build-base \
-    libffi-dev \
-    libssl-dev
-
 COPY ./ /app
-
 RUN pip install --upgrade pip setuptools wheel
 RUN if [ -f pyproject.toml ]; then \
-      pip install . ; \
+      pip install .; \
     else \
       echo "No pyproject.toml found - continuing without installing deps" ; \
     fi
