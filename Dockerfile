@@ -1,15 +1,10 @@
 FROM python:alpine
 WORKDIR /app
 COPY ./ /app
-RUN pip install --upgrade pip setuptools wheel
-RUN if [ -f pyproject.toml ]; then \
-      pip install .; \
-    else \
-      echo "No pyproject.toml found - continuing without installing deps" ; \
-    fi
+RUN pip install --no-cache-dir .
 
 # Create non-root user
-RUN useradd --create-home appuser && chown -R appuser /app
+RUN adduser -D appuser && chown -R appuser /app
 USER appuser
 
 ENV PYTHONUNBUFFERED=1
