@@ -34,24 +34,26 @@ _nonce_store = {}
 _nonce_lock = threading.Lock()
 NONCE_TTL = int(os.environ.get('HAWK_NONCE_TTL', '60'))  # seconds
 
-def seen_nonce(nonce, timestamp=None):
-    """Callable passed to mohawk.Receiver to detect replayed nonces.
-    Mohawk will call this with the nonce (and sometimes a timestamp). If the nonce
-    was already seen within TTL, raise HawkFail to indicate a replay.
+def seen_nonce(credentials_id, nonce, ts=None):
+    """Called by mohawk.Receiver with (credentials_id, nonce, ts).
+    Return True if the nonce has already been seen (indicates a replay). Return
+    False and record the nonce otherwise. Nonces are namespaced by credentials_id.
     """
     now = time.time()
+    key = f"{credentials_id}:{nonce}"
     with _nonce_lock:
         # cleanup expired
         expired = [n for n, exp in _nonce_store.items() if exp < now]
         for n in expired:
             del _nonce_store[n]
 
-        if nonce in _nonce_store:
-            # raise HawkFail to indicate this nonce was seen before
-            raise HawkFail('Nonce replay detected')
+        if key in _nonce_store:
+            # already seen
+            return True
 
         # mark nonce as seen until TTL
-        _nonce_store[nonce] = now + NONCE_TTL
+        _nonce_store[key] = now + NONCE_TTL
+        return False
 
 # --- Simple in-memory rate limiter ---
 _rate_store = {}
@@ -194,7 +196,7 @@ def parse_article_filename(filename):
     match = re.match(r'^(.+)_(\d{1,2})-(\d{1,2})$', name_without_ext)
     if match:
         name, month, day = match.groups()
-        return (name, int(month), int(day))
+        return (name.lower(), int(month), int(day))
     return None
 
 def get_all_articles():
@@ -274,15 +276,18 @@ def home():
 @app.route('/article/<slug>')
 def article(slug):
     """
-    Article page - loads article data from JSON and renders article.html template
-    slug is the article name (without month-day)
+    Article page - loads article data from JSON and renders article.html template.
+    Slugs and filenames are normalized to lowercase.
     """
+    # Normalize requested slug to lowercase
+    req_slug = slug.lower()
+
     # Find the article file matching this slug
     articles = get_all_articles()
     article_data = None
-    
+
     for art in articles:
-        if art['slug'] == slug:
+        if art.get('slug') == req_slug:
             filepath = os.path.join(ARTICLES_DIR, art['filename'])
             # Defensively ensure the filepath resolves inside ARTICLES_DIR
             fullpath = os.path.abspath(filepath)
@@ -293,10 +298,10 @@ def article(slug):
             with open(fullpath, 'r', encoding='utf-8') as f:
                 article_data = json.load(f)
             break
-    
+
     if not article_data:
         abort(404)
-    
+
     # Render the article template with the parsed dict; use Jinja's tojson() in template
     return render_template('article.html', article_json=article_data)
 
@@ -321,10 +326,11 @@ def upload():
         abort(400)
     
     header = article_data.get('header', {})
-    # Normalize and restrict the name to safe characters to avoid path issues
-    raw_name = header.get('name', 'untitled')
+    # Use mainHeader as the article title for filename, fallback to name, fallback to 'untitled'
+    raw_name = header.get('mainHeader') or header.get('name') or 'untitled'
     # allow only alphanum, underscore and hyphen in filenames
     name = re.sub(r"[^A-Za-z0-9_\-]", "_", raw_name).strip('_') or 'untitled'
+    name = name.lower()
     date_str = header.get('date', '')
     try:
         date_obj = datetime.strptime(date_str, '%B %d, %Y')
@@ -338,7 +344,7 @@ def upload():
     if len(name) > 20:
         name = name[:20]
 
-    filename = f"{name}_{month}-{day}.json"
+    filename = f"{name}_{month}-{day}.json".lower()
     os.makedirs(ARTICLES_DIR, exist_ok=True)
     # Change article data upload date, add upload time
     article_data['header']['date'] = article_data['header'].get('date', '') + " " + datetime.now().strftime('%H:%M:%S')
@@ -353,7 +359,7 @@ def upload():
     try:
         with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
             json.dump(sanitized_article, f, ensure_ascii=False, indent=2)
-        final_path = os.path.join(ARTICLES_DIR, filename)
+        final_path = os.path.join(ARTICLES_DIR, filename.lower())
         os.replace(temp_path, final_path)
     finally:
         # cleanup stray temp file if something went wrong
