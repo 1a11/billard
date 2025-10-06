@@ -1,6 +1,11 @@
 import os
+import tempfile
 import re
 import json
+import time
+import html as _html
+import threading
+import logging
 import calendar
 import secrets
 import requests
@@ -14,6 +19,118 @@ from mohawk import Receiver
 from mohawk.exc import HawkFail
 
 app = Flask(__name__, template_folder='templates')
+
+# --- Logging setup ---
+logger = logging.getLogger('billard')
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+    logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+# --- Nonce store for HAWK replay protection ---
+# Simple in-memory nonce store with TTL.
+_nonce_store = {}
+_nonce_lock = threading.Lock()
+NONCE_TTL = int(os.environ.get('HAWK_NONCE_TTL', '60'))  # seconds
+
+def seen_nonce(nonce, timestamp=None):
+    """Callable passed to mohawk.Receiver to detect replayed nonces.
+    Mohawk will call this with the nonce (and sometimes a timestamp). If the nonce
+    was already seen within TTL, raise HawkFail to indicate a replay.
+    """
+    now = time.time()
+    with _nonce_lock:
+        # cleanup expired
+        expired = [n for n, exp in _nonce_store.items() if exp < now]
+        for n in expired:
+            del _nonce_store[n]
+
+        if nonce in _nonce_store:
+            # raise HawkFail to indicate this nonce was seen before
+            raise HawkFail('Nonce replay detected')
+
+        # mark nonce as seen until TTL
+        _nonce_store[nonce] = now + NONCE_TTL
+
+# --- Simple in-memory rate limiter ---
+_rate_store = {}
+_rate_lock = threading.Lock()
+
+def rate_limit(max_requests: int = 10, window_seconds: int = 60):
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            # use remote addr + endpoint as key
+            client = request.remote_addr or 'unknown'
+            key = f"{client}:{request.endpoint}"
+            now = time.time()
+            with _rate_lock:
+                count, reset = _rate_store.get(key, (0, now + window_seconds))
+                if now > reset:
+                    # window expired
+                    count = 0
+                    reset = now + window_seconds
+
+                if count >= max_requests:
+                    # too many requests
+                    abort(429)
+
+                _rate_store[key] = (count + 1, reset)
+
+            return f(*args, **kwargs)
+
+        return wrapped
+
+    return decorator
+
+# --- Security headers ---
+@app.after_request
+def set_security_headers(response):
+    response.headers['Strict-Transport-Security'] = 'max-age=63072000; includeSubDomains; preload'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['Referrer-Policy'] = 'no-referrer-when-downgrade'
+    response.headers['Permissions-Policy'] = 'geolocation=()'
+    csp = ""
+    response.headers['Content-Security-Policy'] = csp
+    return response
+
+
+# --- Article sanitizer ---
+def sanitize_text(s: str) -> tuple[str, bool]:
+    """Escape HTML special chars in string s. Returns (sanitized_string, changed_flag)."""
+    if not isinstance(s, str):
+        return s, False
+    if '<' in s or '>' in s or '&' in s:
+        return _html.escape(s), True
+    return s, False
+
+
+def sanitize_article_data(obj):
+    """Recursively sanitize all string fields inside article JSON-like structure.
+    Returns (sanitized_obj, changed_flag)
+    """
+    changed = False
+    if isinstance(obj, dict):
+        new = {}
+        for k, v in obj.items():
+            sv, ch = sanitize_article_data(v)
+            new[k] = sv
+            changed = changed or ch
+        return new, changed
+    elif isinstance(obj, list):
+        new_list = []
+        for item in obj:
+            sv, ch = sanitize_article_data(item)
+            new_list.append(sv)
+            changed = changed or ch
+        return new_list, changed
+    elif isinstance(obj, str):
+        s2, ch = sanitize_text(obj)
+        return s2, ch
+    else:
+        return obj, False
 
 ARTICLES_DIR = 'articles'
 CREDENTIALS = {
@@ -48,11 +165,13 @@ def require_hawk_auth(f):
                 method=request.method,
                 content=content_handler(None)[0],
                 content_type=content_handler(None)[1],
-                seen_nonce=None
+                seen_nonce=seen_nonce,
             )
         except HawkFail as e:
+            logger.warning('HAWK authentication failed: %s %s %s', request.remote_addr, request.method, request.path)
             abort(401)
-        
+
+        logger.info('HAWK auth success: %s %s %s', request.remote_addr, request.method, request.path)
         return f(*args, **kwargs)
     
     return decorated_function
@@ -165,15 +284,21 @@ def article(slug):
     for art in articles:
         if art['slug'] == slug:
             filepath = os.path.join(ARTICLES_DIR, art['filename'])
-            with open(filepath, 'r', encoding='utf-8') as f:
+            # Defensively ensure the filepath resolves inside ARTICLES_DIR
+            fullpath = os.path.abspath(filepath)
+            allowed_dir = os.path.abspath(ARTICLES_DIR)
+            if not fullpath.startswith(allowed_dir + os.sep) and fullpath != allowed_dir:
+                # suspicious path, skip
+                continue
+            with open(fullpath, 'r', encoding='utf-8') as f:
                 article_data = json.load(f)
             break
     
     if not article_data:
         abort(404)
     
-    # Render the article template with the JSON data embedded
-    return render_template('article.html', article_json=json.dumps(article_data))
+    # Render the article template with the parsed dict; use Jinja's tojson() in template
+    return render_template('article.html', article_json=article_data)
 
 @app.route('/work')
 def work():
@@ -189,13 +314,17 @@ def contact():
 
 @app.post("/admin/upload")
 @require_hawk_auth
+@rate_limit(max_requests=5, window_seconds=60)
 def upload():
     article_data = request.get_json()
     if not article_data:
         abort(400)
     
     header = article_data.get('header', {})
-    name = header.get('name', 'untitled').replace(' ', '_')
+    # Normalize and restrict the name to safe characters to avoid path issues
+    raw_name = header.get('name', 'untitled')
+    # allow only alphanum, underscore and hyphen in filenames
+    name = re.sub(r"[^A-Za-z0-9_\-]", "_", raw_name).strip('_') or 'untitled'
     date_str = header.get('date', '')
     try:
         date_obj = datetime.strptime(date_str, '%B %d, %Y')
@@ -206,33 +335,58 @@ def upload():
         day = 1
         date_obj = datetime(datetime.now().year, month, day)
     
-    name = name.replace('/', '_').replace('\\', '_')
     if len(name) > 20:
         name = name[:20]
 
     filename = f"{name}_{month}-{day}.json"
-    filepath = os.path.join(ARTICLES_DIR, filename)
     os.makedirs(ARTICLES_DIR, exist_ok=True)
-    # Change article data upoad date, add upload time
-    article_data['header']['date'] = article_data['header']['date'] + " " + datetime.now().strftime('%H:%M:%S')
-    with open(filepath, 'w', encoding='utf-8') as f:
-        json.dump(article_data, f, ensure_ascii=False, indent=2)
+    # Change article data upload date, add upload time
+    article_data['header']['date'] = article_data['header'].get('date', '') + " " + datetime.now().strftime('%H:%M:%S')
 
+    # Sanitize article content to avoid HTML/script injection in stored articles
+    sanitized_article, changed = sanitize_article_data(article_data)
+    if changed:
+        logger.info('Article upload sanitized for name=%s date=%s client=%s', name, date_str, request.remote_addr)
 
-    return jsonify({"ok": True}), 201
+    # Write atomically: write sanitized content to a temp file in the articles dir then replace
+    temp_fd, temp_path = tempfile.mkstemp(dir=ARTICLES_DIR, prefix=".upload-", suffix=".tmp")
+    try:
+        with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
+            json.dump(sanitized_article, f, ensure_ascii=False, indent=2)
+        final_path = os.path.join(ARTICLES_DIR, filename)
+        os.replace(temp_path, final_path)
+    finally:
+        # cleanup stray temp file if something went wrong
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
+
+    return jsonify({"ok": True, "sanitized": bool(changed)}), 201
 
 @app.post("/admin/remove")
 @require_hawk_auth
+@rate_limit(max_requests=5, window_seconds=60)
 def remove():
     data = request.get_json()
     if not data or 'filename' not in data:
         abort(400)
     filename = data['filename']
-    filename = filename.replace('/', '_').replace('\\', '_')
+    # Disallow path traversal characters and separators
+    if '/' in filename or '\\' in filename or '..' in filename:
+        abort(400)
+    # sanitize further: only allow simple filenames
+    filename = re.sub(r"[^A-Za-z0-9_\-\.]+", "", filename)
     if not filename.endswith('.json'):
         abort(400)
-    filepath = os.path.join(ARTICLES_DIR, filename)
-     
+
+    filepath = os.path.abspath(os.path.join(ARTICLES_DIR, filename))
+    allowed_dir = os.path.abspath(ARTICLES_DIR)
+    # Ensure the resolved path is inside the articles directory
+    if not filepath.startswith(allowed_dir + os.sep) and filepath != allowed_dir:
+        abort(400)
+
     if os.path.exists(filepath):
         os.remove(filepath)
     else:

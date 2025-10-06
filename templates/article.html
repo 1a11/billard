@@ -488,11 +488,11 @@
         // Global variable to store the calculated primary color
         let stickerFigureColor = '';
         
-        /**
-         * The central configuration object for the entire article.
-         * This data is loaded from the server via JSON.
-         */
-        const articleData = {{ article_json|safe }};
+    /**
+     * The central configuration object for the entire article.
+     * This data is provided by the server as an object; serialize safely with tojson().
+     */
+    const articleData = {{ article_json|tojson }};
 
         // --- Color Generation Utilities ---
         function hslToHex(h, s, l) {
