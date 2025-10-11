@@ -1,4 +1,5 @@
 # Billard - Minimal Blog System
+[<img src="https://raw.githubusercontent.com/1a11/billard/refs/heads/main/.github/workflows/aidr.svg" height="20">](https://github.com/1a11/billard)
 
 A minimal, procedurally-styled blog system with dynamic article loading, field notes (bracket comments), and HAWK-authenticated admin API.
 
@@ -260,4 +261,5 @@ Content-Type: application/json
 - Article versioning and drafts
 - Search functionality
 - RSS feed generation
+
 
