@@ -631,6 +631,8 @@
                                 rgbValues.every(v => /^\d+$/.test(v) && Number(v) >= 0 && Number(v) <= 255)
                             ) {
                                 element.style.color = `rgb(${rgbValues.join(',')})`;
+                            } else {
+                                console.warn(`Invalid RGB color: ${itemColor}`);
                             }
                         } else {
                             element.style.color = itemColor.toLowerCase();
