@@ -337,8 +337,13 @@ def get_book_by_slug(slug):
                     filepath = os.path.join(BOOKS_DIR, filename)
                     fullpath = os.path.abspath(os.path.normpath(filepath))
                     # Ensure path is inside BOOKS_DIR using os.path.commonpath
-                    if os.path.commonpath([fullpath, allowed_dir]) != allowed_dir:
-                        continue
+                    if os.path.commonpath([fullpath, allowed_dir]) == allowed_dir:
+                        try:
+                            with open(fullpath, 'r', encoding='utf-8') as f:
+                                book_data = json.load(f)
+                                break
+                        except:
+                            continue
                     try:
                         with open(fullpath, 'r', encoding='utf-8') as f:
                             book_data = json.load(f)
