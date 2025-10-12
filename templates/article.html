@@ -608,6 +608,45 @@
                     // --- Handle Text Blocks (h2, h3, p) ---
                     element = document.createElement(item.type);
                     element.innerHTML = item.text;
+
+                    if (item.color) {
+                        let itemColor = item.color.trim();
+
+                        if (itemColor.startsWith('#')) {
+                            let hex = itemColor.replace('#', '');
+                            const isValidHex = /^[0-9a-fA-F]{3}$/.test(hex) || /^[0-9a-fA-F]{6}$/.test(hex);
+
+                            if (isValidHex) {
+                                // Making a hex value
+                                element.style.color = `#${
+                                    (hex.length === 3) ? hex.split('').map(c => c + c).join('') : hex
+                                }`;
+                            } else {
+                                console.warn(`Invalid hex color: ${itemColor}`);
+                            }
+                        } else if (itemColor.startsWith('(') && itemColor.endsWith(')')) {
+                            const rgbValues = itemColor.slice(1, -1).split(',').map(v => v.trim());
+                            if (
+                                rgbValues.length === 3 &&
+                                rgbValues.every(v => /^\d+$/.test(v) && Number(v) >= 0 && Number(v) <= 255)
+                            ) {
+                                element.style.color = `rgb(${rgbValues.join(',')})`;
+                            } else {
+                                console.warn(`Invalid RGB color: ${itemColor}`);
+                            }
+                        } else {
+                            // Validate named CSS color
+                            const testColor = itemColor.toLowerCase();
+                            const testElem = document.createElement('span');
+                            testElem.style.color = testColor;
+                            // The browser sets style.color to an empty string if invalid
+                            if (testElem.style.color === testColor) {
+                                element.style.color = testColor;
+                            } else {
+                                console.warn(`Invalid named color: ${itemColor}`);
+                            }
+                    }
+
                 } else {
                     console.error(`Unknown article item type: ${item.type}`);
                     return;
