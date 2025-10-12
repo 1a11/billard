@@ -1,8 +1,11 @@
 name: ci
+permissions:
+  contents: read
 
 on:
   push:
-
+    branches:
+      - main
 jobs:
   docker:
     runs-on: ubuntu-latest
