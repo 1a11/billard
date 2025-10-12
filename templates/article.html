@@ -613,15 +613,15 @@
                         let itemColor = item.color.trim();
 
                         if (itemColor.startsWith('#')) {
-                            let hex = itemColor;
+                            let hex = itemColor.replace('#', '');
 
                             if (hex.length === 3) {
                                 hex = hex.split('').map(c => c + c).join('');
                             }
 
-                            element.style.color = hex;
-                        } if (itemColor.startsWith('(') && itemColor.endsWith(')')) {
-                            element.style.color = `rgb${itemColor.replace(' ', '')}`;
+                            element.style.color = `#${hex}`;
+                        } else if (itemColor.startsWith('(') && itemColor.endsWith(')')) {
+                            element.style.color = `rgb${itemColor.replaceAll(' ', '')}`;
                         } else {
                             element.style.color = itemColor.toLowerCase();
                         }
