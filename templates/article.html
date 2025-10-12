@@ -640,7 +640,7 @@
                             const testElem = document.createElement('span');
                             testElem.style.color = testColor;
                             // The browser sets style.color to an empty string if invalid
-                            if (testElem.style.color === testColor) {
+                            if (testElem.style.color !== "") {
                                 element.style.color = testColor;
                             } else {
                                 console.warn(`Invalid named color: ${itemColor}`);
