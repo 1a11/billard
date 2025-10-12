@@ -387,13 +387,12 @@ def remove():
     if not filename.endswith('.json'):
         abort(400)
 
-    allowed_dir = os.path.abspath(ARTICLES_DIR)
-    filepath = os.path.abspath(os.path.join(allowed_dir, filename))
-    # Ensure the resolved path is inside the articles directory, not equal to the articles directory itself.
-    try:
-        if os.path.commonpath([filepath, allowed_dir]) != allowed_dir or filepath == allowed_dir:
-            abort(400)
-    except ValueError:
+    filepath = os.path.abspath(os.path.join(ARTICLES_DIR, filename))
+    allowed_dir = os.path.realpath(os.path.abspath(ARTICLES_DIR))
+    # Ensure the resolved path is inside the articles directory (resolve symlinks)
+    real_filepath = os.path.realpath(filepath)
+    # Prevent deletion of the articles directory itself and ensure containment
+    if os.path.commonpath([allowed_dir, real_filepath]) != allowed_dir or real_filepath == allowed_dir:
         abort(400)
 
     if os.path.exists(filepath):
