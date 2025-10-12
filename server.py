@@ -389,7 +389,13 @@ def get_book_by_slug(slug):
     try:
         os.makedirs(BOOKS_DIR, exist_ok=True)
         template_path = os.path.join(BOOKS_DIR, f"{slug}.json")
-        with open(template_path, 'w', encoding='utf-8') as f:
+        # Path traversal protection: ensure file stays inside BOOKS_DIR
+        safe_template_path = os.path.abspath(os.path.normpath(template_path))
+        books_dir_abs = os.path.abspath(BOOKS_DIR)
+        if not safe_template_path.startswith(books_dir_abs + os.sep):
+            logger.warning(f"Path traversal detected in slug: {slug}")
+            raise Exception("Invalid book slug")
+        with open(safe_template_path, 'w', encoding='utf-8') as f:
             json.dump(template_data, f, ensure_ascii=False, indent=2)
         logger.info(f'Created template book file: {slug}.json')
     except Exception as e:
