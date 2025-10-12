@@ -345,12 +345,6 @@ def get_book_by_slug(slug):
                                 break
                         except:
                             continue
-                    try:
-                        with open(fullpath, 'r', encoding='utf-8') as f:
-                            book_data = json.load(f)
-                            break
-                    except:
-                        continue
     
     # If detailed book data found, merge with metadata (metadata takes precedence for cover and title)
     if book_data:
