@@ -635,8 +635,16 @@
                                 console.warn(`Invalid RGB color: ${itemColor}`);
                             }
                         } else {
-                            element.style.color = itemColor.toLowerCase();
-                        }
+                            // Validate named CSS color
+                            const testColor = itemColor.toLowerCase();
+                            const testElem = document.createElement('span');
+                            testElem.style.color = testColor;
+                            // The browser sets style.color to an empty string if invalid
+                            if (testElem.style.color === testColor) {
+                                element.style.color = testColor;
+                            } else {
+                                console.warn(`Invalid named color: ${itemColor}`);
+                            }
                     }
 
                 } else {
