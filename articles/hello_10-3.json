@@ -64,6 +64,21 @@
       "type": "p",
       "id": "p-tension",
       "text": "Буду теперь писать всякие штуки про работу и про жизнь, и про технологии, и про языкиииии..."
+    },
+    {
+      "type": "h3",
+      "text": "Colors",
+      "color": "red"
+    },
+    {
+      "type": "p",
+      "text": "It is possible to add colored text to your blogs by adding the color as a field in the JSON :)",
+      "color": "#0b0"
+    },
+    {
+      "type": "p",
+      "text": "We support rgb: (34,56,200), hex #fff or #ff72a9, and text (e.g: green, blue, red)",
+      "color": "(144,55,192)"
     }
   ],
   "fieldNotes": [

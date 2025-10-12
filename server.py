@@ -15,6 +15,7 @@ from collections import defaultdict
 from functools import wraps
 
 from flask import Flask, render_template, jsonify, abort, request, redirect, url_for
+from werkzeug.utils import secure_filename
 from mohawk import Receiver
 from mohawk.exc import HawkFail
 
@@ -135,6 +136,7 @@ def sanitize_article_data(obj):
         return obj, False
 
 ARTICLES_DIR = 'articles'
+BOOKS_DIR = 'books'
 CREDENTIALS = {
     "billard": {
         "id": "billard", 
@@ -266,6 +268,146 @@ def group_articles_by_year(articles):
     # Sort years in descending order
     return dict(sorted(grouped.items(), reverse=True))
 
+def get_all_books():
+    """
+    Load books metadata from books/books.json
+    Returns list of book metadata dicts
+    """
+    books_meta_path = os.path.join(BOOKS_DIR, 'books.json')
+    if not os.path.exists(books_meta_path):
+        return []
+    
+    try:
+        with open(books_meta_path, 'r', encoding='utf-8') as f:
+            books = json.load(f)
+        return books if isinstance(books, list) else []
+    except:
+        logger.warning('Failed to load books.json')
+        return []
+
+def get_book_by_slug(slug):
+    """
+    Load individual book data from books/<slug>.json or generate basic page from books.json metadata
+    Always uses cover and title from books.json metadata when available
+    Automatically creates a template JSON file if book exists in books.json but has no detail file
+    Returns book data dict or None
+    """
+    # Normalize slug to lowercase
+    slug = slug.lower()
+    
+    # Validate slug to allow only expected characters to prevent path traversal
+    if not re.fullmatch(r'[a-zA-Z0-9_-]+', slug):
+        return None
+    
+    # First, try to get metadata from books.json
+    all_books = get_all_books()
+    book_metadata = None
+    for book_meta in all_books:
+        if book_meta.get('slug', '').lower() == slug:
+            book_metadata = book_meta
+            break
+    
+    # If slug doesn't exist in books.json at all, return None (404)
+    if not book_metadata:
+        return None
+    
+    # Try to load detailed book data from JSON file
+    book_data = None
+    
+    # Try direct slug.json first
+    book_path = os.path.abspath(os.path.normpath(os.path.join(BOOKS_DIR, f"{slug}.json")))
+    allowed_dir = os.path.abspath(os.path.normpath(BOOKS_DIR))
+    
+    # Ensure path is inside BOOKS_DIR using os.path.commonpath
+    if os.path.commonpath([book_path, allowed_dir]) == allowed_dir:
+        if os.path.exists(book_path):
+            try:
+                with open(book_path, 'r', encoding='utf-8') as f:
+                    book_data = json.load(f)
+            except:
+                logger.warning(f'Failed to load book file: {slug}.json')
+    
+    # If not found, try to find a file that matches the slug pattern
+    if not book_data and os.path.exists(BOOKS_DIR):
+        for filename in os.listdir(BOOKS_DIR):
+            if filename == 'books.json':
+                continue
+            if filename.endswith('.json'):
+                file_slug = filename[:-5].lower()
+                if file_slug == slug:
+                    filepath = os.path.join(BOOKS_DIR, filename)
+                    fullpath = os.path.abspath(os.path.normpath(filepath))
+                    # Ensure path is inside BOOKS_DIR using os.path.commonpath
+                    if os.path.commonpath([fullpath, allowed_dir]) == allowed_dir:
+                        try:
+                            with open(fullpath, 'r', encoding='utf-8') as f:
+                                book_data = json.load(f)
+                                break
+                        except:
+                            continue
+    
+    # If detailed book data found, merge with metadata (metadata takes precedence for cover and title)
+    if book_data:
+        book_data['coverUrl'] = book_metadata.get('imageUrl', book_data.get('coverUrl', ''))
+        book_data['title'] = book_metadata.get('title', book_data.get('title', 'Unknown Title'))
+        book_data['author'] = book_metadata.get('author', book_data.get('author', 'Unknown Author'))
+        # Ensure awards field exists for backward compatibility
+        if 'awards' not in book_data:
+            book_data['awards'] = []
+        return book_data
+    
+    # If no detailed data, generate basic page from books.json metadata and create template file
+    template_data = {
+        'coverUrl': book_metadata.get('imageUrl', ''),
+        'author': book_metadata.get('author', 'Unknown Author'),
+        'title': book_metadata.get('title', 'Unknown Title'),
+        'subtitle': 'Not written yet.',
+        'progress': {
+            'currentPage': 0,
+            'totalPages': 0
+        },
+        'status': {
+            'type': 'unknown',
+            'text': 'Status unknown'
+        },
+        'awards': [],
+        'sections': [
+            {
+                'title': 'About',
+                'id': 'about-section',
+                'content': [
+                    'Description not written yet.'
+                ]
+            },
+            {
+                'title': 'Review',
+                'id': 'review-section',
+                'content': [
+                    'Review not written yet.'
+                ]
+            }
+        ]
+    }
+    
+    # Create the template file
+    try:
+        os.makedirs(BOOKS_DIR, exist_ok=True)
+        safe_filename = secure_filename(f"{slug}.json")
+        template_path = os.path.join(BOOKS_DIR, safe_filename)
+        # Path traversal protection: ensure file stays inside BOOKS_DIR
+        safe_template_path = os.path.abspath(os.path.normpath(template_path))
+        books_dir_abs = os.path.abspath(BOOKS_DIR)
+        if not safe_template_path.startswith(books_dir_abs + os.sep):
+            logger.warning(f"Path traversal detected in slug: {slug}")
+            raise Exception("Invalid book slug")
+        with open(safe_template_path, 'w', encoding='utf-8') as f:
+            json.dump(template_data, f, ensure_ascii=False, indent=2)
+        logger.info(f'Created template book file: {slug}.json')
+    except Exception as e:
+        logger.warning(f'Failed to create template book file for {slug}: {e}')
+    
+    return template_data
+
 @app.route('/')
 def home():
     """Home page - shows only the latest article"""
@@ -316,6 +458,22 @@ def work():
 def contact():
     """Contact page"""
     return render_template('contact.html')
+
+@app.route('/books')
+def books():
+    """Books listing page - displays all books from books.json"""
+    all_books = get_all_books()
+    return render_template('books.html', books=all_books)
+
+@app.route('/book/<slug>')
+def book(slug):
+    """Individual book page - loads book data from JSON and renders book.html template"""
+    book_data = get_book_by_slug(slug)
+    
+    if not book_data:
+        abort(404)
+    
+    return render_template('book.html', book=book_data)
 
 @app.post("/admin/upload")
 @require_hawk_auth
