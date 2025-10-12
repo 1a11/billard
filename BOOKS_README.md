@@ -62,4 +62,4 @@ The "books" link has been added to all main navigation menus across templates.
   - Use all other data (subtitle, progress, status, sections) from the JSON file
 - You can then manually edit the generated template file to add real content
 - Example workflow: Visit `/book/neuromancer` → system creates `/books/neuromancer.json` → edit that file to add details
-- Currently only `city-start.json` exists as a manually created demo file (Norwegian Wood)
+- Currently only `prof-fav.json` exists as a manually created demo file (Norwegian Wood)
