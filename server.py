@@ -390,7 +390,10 @@ def remove():
     allowed_dir = os.path.abspath(ARTICLES_DIR)
     filepath = os.path.abspath(os.path.join(allowed_dir, filename))
     # Ensure the resolved path is inside the articles directory, not equal to the articles directory itself.
-    if os.path.commonpath([filepath, allowed_dir]) != allowed_dir or filepath == allowed_dir:
+    try:
+        if os.path.commonpath([filepath, allowed_dir]) != allowed_dir or filepath == allowed_dir:
+            abort(400)
+    except ValueError:
         abort(400)
 
     if os.path.exists(filepath):
