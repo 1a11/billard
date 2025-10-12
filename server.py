@@ -389,13 +389,10 @@ def remove():
 
     filepath = os.path.abspath(os.path.join(ARTICLES_DIR, filename))
     allowed_dir = os.path.realpath(os.path.abspath(ARTICLES_DIR))
-    # Ensure allowed_dir ends with a path separator
-    if not allowed_dir.endswith(os.sep):
-        allowed_dir = allowed_dir + os.sep
     # Ensure the resolved path is inside the articles directory (resolve symlinks)
     real_filepath = os.path.realpath(filepath)
     # Prevent deletion of the articles directory itself and ensure containment
-    if real_filepath == allowed_dir.rstrip(os.sep) or not real_filepath.startswith(allowed_dir):
+    if os.path.commonpath([allowed_dir, real_filepath]) != allowed_dir or real_filepath == allowed_dir:
         abort(400)
 
     if os.path.exists(filepath):
