@@ -310,11 +310,11 @@ def get_book_by_slug(slug):
     book_data = None
     
     # Try direct slug.json first
-    book_path = os.path.abspath(os.path.join(BOOKS_DIR, f"{slug}.json"))
-    allowed_dir = os.path.abspath(BOOKS_DIR)
+    book_path = os.path.abspath(os.path.normpath(os.path.join(BOOKS_DIR, f"{slug}.json")))
+    allowed_dir = os.path.abspath(os.path.normpath(BOOKS_DIR))
     
-    # Ensure path is inside BOOKS_DIR
-    if book_path.startswith(allowed_dir + os.sep) or book_path == allowed_dir:
+    # Ensure path is inside BOOKS_DIR using os.path.commonpath
+    if os.path.commonpath([book_path, allowed_dir]) == allowed_dir:
         if os.path.exists(book_path):
             try:
                 with open(book_path, 'r', encoding='utf-8') as f:
@@ -331,8 +331,9 @@ def get_book_by_slug(slug):
                 file_slug = filename[:-5].lower()
                 if file_slug == slug:
                     filepath = os.path.join(BOOKS_DIR, filename)
-                    fullpath = os.path.abspath(filepath)
-                    if not fullpath.startswith(allowed_dir + os.sep) and fullpath != allowed_dir:
+                    fullpath = os.path.abspath(os.path.normpath(filepath))
+                    # Ensure path is inside BOOKS_DIR using os.path.commonpath
+                    if os.path.commonpath([fullpath, allowed_dir]) != allowed_dir:
                         continue
                     try:
                         with open(fullpath, 'r', encoding='utf-8') as f:
