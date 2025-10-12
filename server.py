@@ -365,7 +365,7 @@ def upload():
         # Ensure the resolved path is inside the articles directory using a robust containment check
         if not final_abs_path.startswith(allowed_dir + os.sep) and final_abs_path != allowed_dir:
             abort(400)
-        os.replace(temp_path, final_abs_path)
+        os.replace(temp_path, final_path)
     finally:
         # cleanup stray temp file if something went wrong
         if os.path.exists(temp_path):
