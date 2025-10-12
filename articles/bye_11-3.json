@@ -1,0 +1,88 @@
+{
+  "header": {
+    "mainHeader": "Bye, World!",
+    "date": "October 03, 2025",
+    "showLineNumbers": false,
+    "showBlockIds": false
+  },
+  "body": [
+    {
+      "type": "h2",
+      "text": "Bye, World!",
+      "color": "(32, 90,255)"
+    },
+    {
+      "type": "p",
+      "id": "p-monolith",
+      "text": "Это первый пост на бложном двигле!! Супер красивый и функциональный, наконец дошли руки собрать что-то своё!!",
+      "color": "#FF55EE"
+    },
+    {
+      "type": "h3",
+      "text": "Формулы и интересновое",
+      "color": "green"
+    },
+    {
+      "type": "p",
+      "id": "p-spacing",
+      "text": "Мне было важно, чтобы движок нативно поддерживал $\\text{TeX}$. Поэтому все страницы нативно поддерживают формулы, и я могу писать их прямо в тексте. Вот пример: $$E=mc^2$$ А ещё движок поддерживает формулы в блоках с альтом. Это полезно, когда мы рассматриваем конкретные формулы. Например вот так:"
+    },
+    {
+      "type": "figure",
+      "figureType": "formula",
+      "content": "$$\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}$$",
+      "caption": "Уравнение 1: Закон Гаусса для электрических полей, демонстрирующий центрированное отображение формулы и подписи.",
+      "id": "fig-formula"
+    },
+    {
+      "type": "h3",
+      "text": "Картиночковое"
+    },
+    {
+      "type": "figure",
+      "figureType": "image",
+      "content": "https://images.unsplash.com/photo-1530209925954-8aecf4eb1e43?",
+      "caption": " ",
+      "id": "fig-formula-image"
+    },
+    {
+      "type": "p",
+      "id": "p-images",
+      "text": "Ещё он поддерживает картиночки!!! Это тоже важно потому что как иначе я буду показывать всякое интересновое??"
+    },
+    {
+      "type": "h3",
+      "text": "Other languages"
+    },
+    {
+      "type": "p",
+      "id": "p-tension",
+      "text": "It generally support any other language, as long as it is supported by your browser and the font. Here's 'Hello, world!' in a bunch of languages: こんにちは世界! 안녕하세요 세계! 你好，世界！مرحبا بالعالم! Bonjour le monde! Hallo Welt! Ciao mondo! नमस्ते दुनिया! שלום עולם! Olá mundo! Привет, мир!"
+    },
+    {
+      "type": "h3",
+      "text": "Короче всё заебись"
+    },
+    {
+      "type": "p",
+      "id": "p-tension",
+      "text": "Буду теперь писать всякие штуки про работу и про жизнь, и про технологии, и про языкиииии..."
+    }
+  ],
+  "fieldNotes": [
+    {
+      "targetId": "p-spacing",
+      "startLine": 2,
+      "endLine": 5,
+      "position": "right",
+      "text": "МЯУ МЯУ МЯУ МЯУ МЯУ МЯУ МЯУ МЯУ МЯУ МЯУ"
+    },
+    {
+      "targetId": "p-images",
+      "startLine": 1,
+      "endLine": 2,
+      "position": "left",
+      "text": "Это называется field note, и оно поддерживает многострочный теееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееекст"
+    }
+  ]
+}

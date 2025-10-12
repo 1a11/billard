@@ -608,6 +608,25 @@
                     // --- Handle Text Blocks (h2, h3, p) ---
                     element = document.createElement(item.type);
                     element.innerHTML = item.text;
+
+                    if (item.color) {
+                        let itemColor = item.color.trim();
+
+                        if (itemColor.startsWith('#')) {
+                            let hex = itemColor;
+
+                            if (hex.length === 3) {
+                                hex = hex.split('').map(c => c + c).join('');
+                            }
+
+                            element.style.color = hex;
+                        } if (itemColor.startsWith('(') && itemColor.endsWith(')')) {
+                            element.style.color = `rgb${itemColor.replace(' ', '')}`;
+                        } else {
+                            element.style.color = itemColor.toLowerCase();
+                        }
+                    }
+
                 } else {
                     console.error(`Unknown article item type: ${item.type}`);
                     return;
