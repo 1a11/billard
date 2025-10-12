@@ -15,6 +15,7 @@ from collections import defaultdict
 from functools import wraps
 
 from flask import Flask, render_template, jsonify, abort, request, redirect, url_for
+from werkzeug.utils import secure_filename
 from mohawk import Receiver
 from mohawk.exc import HawkFail
 
@@ -397,11 +398,12 @@ def get_book_by_slug(slug):
     # Create the template file
     try:
         os.makedirs(BOOKS_DIR, exist_ok=True)
-        template_path = os.path.join(BOOKS_DIR, f"{slug}.json")
+        safe_filename = secure_filename(f"{slug}.json")
+        template_path = os.path.join(BOOKS_DIR, safe_filename)
         # Path traversal protection: ensure file stays inside BOOKS_DIR
         safe_template_path = os.path.abspath(os.path.normpath(template_path))
         books_dir_abs = os.path.abspath(BOOKS_DIR)
-        if os.path.commonpath([safe_template_path, books_dir_abs]) != books_dir_abs:
+        if not safe_template_path.startswith(books_dir_abs + os.sep):
             logger.warning(f"Path traversal detected in slug: {slug}")
             raise Exception("Invalid book slug")
         with open(safe_template_path, 'w', encoding='utf-8') as f:
