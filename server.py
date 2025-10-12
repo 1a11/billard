@@ -294,6 +294,10 @@ def get_book_by_slug(slug):
     # Normalize slug to lowercase
     slug = slug.lower()
     
+    # Validate slug to allow only expected characters to prevent path traversal
+    if not re.fullmatch(r'[a-zA-Z0-9_-]+', slug):
+        return None
+    
     # First, try to get metadata from books.json
     all_books = get_all_books()
     book_metadata = None
