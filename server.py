@@ -388,9 +388,10 @@ def remove():
         abort(400)
 
     filepath = os.path.abspath(os.path.join(ARTICLES_DIR, filename))
-    allowed_dir = os.path.abspath(ARTICLES_DIR)
-    # Ensure the resolved path is inside the articles directory
-    if not filepath.startswith(allowed_dir + os.sep) and filepath != allowed_dir:
+    allowed_dir = os.path.realpath(os.path.abspath(ARTICLES_DIR))
+    # Ensure the resolved path is inside the articles directory (resolve symlinks)
+    real_filepath = os.path.realpath(filepath)
+    if not (real_filepath.startswith(allowed_dir + os.sep)):
         abort(400)
 
     if os.path.exists(filepath):
