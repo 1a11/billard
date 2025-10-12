@@ -360,6 +360,11 @@ def upload():
         with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
             json.dump(sanitized_article, f, ensure_ascii=False, indent=2)
         final_path = os.path.join(ARTICLES_DIR, filename.lower())
+        final_abs_path = os.path.abspath(final_path)
+        allowed_dir = os.path.abspath(ARTICLES_DIR)
+        # Ensure the resolved path is inside the articles directory using a robust containment check
+        if not final_abs_path.startswith(allowed_dir + os.sep) and final_abs_path != allowed_dir:
+            abort(400)
         os.replace(temp_path, final_path)
     finally:
         # cleanup stray temp file if something went wrong
